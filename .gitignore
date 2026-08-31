@@ -1,0 +1,92 @@
+# ==========================================
+# Root .gitignore for Urban Pulse Project
+# ==========================================
+
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Environment and Secrets (CRITICAL)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.local
+atlas-credentials.env
+backend/.env
+frontend/.env
+yolo_backend/.env
+
+# Allow example config files
+!.env.example
+!*/.env.example
+
+# Python / Virtual Environments
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+yolovenv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Temporary Uploads and Media Output
+uploads/
+*/uploads/
+yolo_backend/uploads/
+*.tmp
+*.temp
+
+# Scratch / Non-essential Folders
+bin/
+documentation/
+documents/
+docs/
+
+# Production Builds
+frontend/build/
+dist/
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS & Editor Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo

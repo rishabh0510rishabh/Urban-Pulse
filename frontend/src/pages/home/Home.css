@@ -1,0 +1,479 @@
+/* ---
+  Component Stylesheet for Home Page
+  Design Transformation by Gemini AI
+  Theme: Eco-Minimalism for "Swacchta&Life"
+--- */
+
+/* 1. FONT IMPORT */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@600;700&display=swap');
+
+/* 2. CSS VARIABLES (THEME DEFINITION)
+   - Professionalism: Centralizing theme properties makes the design consistent
+     and easy to modify in the future.
+*/
+:root {
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Lato', sans-serif;
+
+  --color-background: #f8f9fa;
+  --color-text: #34495e;
+  --color-primary-green: #0a6847; /* Deeper, more corporate green */
+  --color-accent-green: #77b0aa;   /* Brighter, modern green for actions */
+  --color-highlight-bg: #f0fdf4;
+  --color-white: #ffffff;
+  --color-border: #e0e0e0;
+
+  --border-radius: 12px;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.1);
+  --transition-smooth: all 0.3s ease-in-out;
+  
+  /* Neutrals */
+  --color-text-dark: #333;
+  --color-text-light: #ffffff;
+  --color-background-light: #f7fafc;
+  --color-border-light: #e2e8f0;
+  --color-shadow: rgba(0, 0, 0, 0.05);
+}
+
+/* 3. PAGE CONTAINER */
+.home-page {
+  width: 100%;
+  overflow-x: hidden; /* Prevents horizontal scroll */
+}
+
+/* 4. HERO SECTION STYLES
+   - Visual Appeal: Content aligned to left with vertical centering
+*/
+.home__hero {
+  width: 100%;
+  min-height: 90vh;
+  display: flex;
+  align-items: center; /* Vertically center */
+  justify-content: flex-start; /* Align to left */
+  padding-left: 20vh; /* 20vh from left */
+  padding-right: 2vh;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+
+.home__hero-content {
+  max-width: 600px;
+  color: var(--color-white);
+  text-align: left; /* Left align all text */
+  z-index: 2;
+}
+
+.home__hero-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  line-height: 1.2;
+  color: var(--color-white);
+}
+
+.home__hero-subtitle {
+  font-family: var(--font-body);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  color: var(--color-white);
+}
+
+.home__hero-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-start; /* Align buttons to left */
+}
+
+/* 5. REUSABLE BUTTON STYLES
+   - UX Enhancement: Clear, consistent button styles with interactive
+     hover states guide the user and improve usability.
+*/
+.btn {
+  display: inline-block;
+  padding: 14px 32px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+.btn--primary {
+  background-color: var(--color-accent-green);
+  color: var(--color-white);
+}
+
+.btn--primary:hover {
+  background-color: var(--color-primary-green);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn--secondary {
+  background-color: var(--color-white);
+  color: var(--color-accent-green);
+  border-color: var(--color-accent-green);
+}
+
+.btn--secondary:hover {
+  background-color: var(--color-accent-green);
+  color: var(--color-white);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 6. SERVICES SECTION WITH FLIP CARDS */
+.services-section {
+  width: 100%;
+  min-height: 90vh;
+  padding: 5rem 1.5rem;
+  align-items: center;
+  background-color: var(--color-white, #ffffff);
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-header h2 {
+  font-family: var(--font-heading, 'Poppins', sans-serif);
+  font-size: 2.5rem;
+  color: var(--color-primary-green, #0a6847);
+  margin: 0 0 0.75rem 0;
+}
+
+.section-header p {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Flip Cards Grid - 5 columns layout */
+.flip-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Flip Card Container */
+.flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+  height: 280px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Front and Back Shared Styles */
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--border-radius, 12px);
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Front Side */
+.flip-card-front {
+  background: linear-gradient(135deg, #f8fafb 0%, #ffffff 100%);
+  border: 2px solid var(--color-border, #e5e7eb);
+}
+
+.flip-card-front .card-icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 1rem;
+  color: var(--color-primary-green, #10b981);
+}
+
+.flip-card-front .card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text, #1f2937);
+  margin-bottom: 0.75rem;
+  font-family: var(--font-heading, 'Inter', sans-serif);
+}
+
+.card-description {
+  font-size: 0.95rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.flip-hint {
+  font-size: 0.8rem;
+  color: var(--color-primary-green, #10b981);
+  font-weight: 500;
+  margin-top: auto;
+  opacity: 0.7;
+}
+
+/* Back Side */
+.flip-card-back {
+  background: linear-gradient(135deg, var(--color-primary-green, #10b981) 0%, var(--color-accent-green, #059669) 100%);
+  color: white;
+  transform: rotateY(180deg);
+  border: 2px solid var(--color-primary-green, #10b981);
+}
+
+.card-back-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  color: white;
+}
+
+.card-details-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.card-details-list li {
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  padding-left: 1.5rem;
+}
+
+.card-details-list li:last-child {
+  border-bottom: none;
+}
+
+.card-details-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: white;
+  font-weight: bold;
+}
+
+.card-back-icon {
+  font-size: 2rem;
+  margin-top: auto;
+  opacity: 0.3;
+}
+
+/* Responsive Design for Flip Cards */
+@media (max-width: 1400px) {
+  .flip-cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .flip-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .flip-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  
+  .flip-card {
+    height: 260px;
+  }
+}
+
+@media (max-width: 600px) {
+  .flip-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .flip-card {
+    height: 240px;
+  }
+  
+  .services-section {
+    padding: 3rem 1rem;
+  }
+  
+  .flip-card-front .card-title {
+    font-size: 1.1rem;
+  }
+  
+  .card-description {
+    font-size: 0.9rem;
+  }
+}
+
+/* 7. TRAINING / GREEN PRACTICES SECTION */
+.training-features-section {
+  width: 100%;
+  padding: 4rem 1rem;
+  background-color: var(--color-background-light);
+}
+
+.training-content-wrapper {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.training-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.training-header-title {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: var(--color-primary-green);
+  margin: 0 0 0.75rem 0;
+}
+
+.training-header-subtitle {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.6;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.training-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.training-card {
+  background-color: var(--color-text-light);
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid var(--color-border-light);
+  box-shadow: 0 4px 15px var(--color-shadow);
+  text-align: center;
+  transition: 
+    transform 0.3s ease, 
+    box-shadow 0.3s ease;
+}
+
+.training-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.training-card-icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 1.25rem;
+}
+
+.training-card-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin: 0 0 0.5rem 0;
+}
+
+.training-card-text {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 8. FOOTER STYLES */
+.home__footer {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  background-color: #eef2f5;
+  border-top: 1px solid var(--color-border);
+  color: #6c757d;
+}
+
+/* ===============================================
+   RESPONSIVE BREAKPOINTS
+=============================================== */
+
+/* Hero Section Mobile */
+@media (max-width: 768px) {
+  .home__hero {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    min-height: 70vh;
+  }
+
+  .home__hero-content {
+    max-width: 100%;
+  }
+
+  .home__hero-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .home__hero-actions .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Training Section - Tablet: 2x2 Grid */
+@media (min-width: 768px) {
+  .training-features-section {
+    padding: 5rem 2rem;
+  }
+
+  .training-header-title {
+    font-size: 2.75rem;
+  }
+
+  .training-header-subtitle {
+    font-size: 1.15rem;
+  }
+
+  .training-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+}
+
+/* Training Section - Desktop: 4-Column Grid */
+@media (min-width: 1024px) {
+  .training-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .training-card {
+    text-align: left;
+  }
+}
