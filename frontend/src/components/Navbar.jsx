@@ -143,6 +143,7 @@ export default function Navbar() {
               <button
                 className={`nav__link nav__dropdown-trigger ${isServiceActive ? "active" : ""}`}
                 onClick={() => setServicesOpen(!servicesOpen)}
+                aria-expanded={servicesOpen}
               >
                 Services
                 <span className={`dropdown-arrow ${servicesOpen ? "dropdown-arrow--open" : ""}`}>▼</span>
@@ -173,6 +174,7 @@ export default function Navbar() {
           className={`navbar__toggle ${menuOpen ? "navbar__toggle--open" : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle navigation"
+          aria-expanded={menuOpen}
         >
           <span className="hamburger__line hamburger__line--1"></span>
           <span className="hamburger__line hamburger__line--2"></span>
