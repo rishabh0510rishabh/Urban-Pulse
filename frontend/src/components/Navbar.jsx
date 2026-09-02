@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Github } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import "./Navbar.css";
 
@@ -109,6 +110,19 @@ export default function Navbar() {
         </Link>
 
         <nav className={`navbar__nav ${menuOpen ? "navbar__nav--open" : ""}`}>
+          <a
+            href="https://github.com/rishabh0510rishabh/Urban-Pulse"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav__link nav__github-btn"
+            aria-label="GitHub Repository"
+            title="GitHub Repository"
+            onClick={() => setMenuOpen(false)}
+          >
+            <Github size={19} className="nav__github-icon" />
+            <span>GitHub</span>
+          </a>
+
           {filteredLinks.map((link) => (
             <Link
               key={link.to}
@@ -129,6 +143,7 @@ export default function Navbar() {
               <button
                 className={`nav__link nav__dropdown-trigger ${isServiceActive ? "active" : ""}`}
                 onClick={() => setServicesOpen(!servicesOpen)}
+                aria-expanded={servicesOpen}
               >
                 Services
                 <span className={`dropdown-arrow ${servicesOpen ? "dropdown-arrow--open" : ""}`}>▼</span>
@@ -159,6 +174,7 @@ export default function Navbar() {
           className={`navbar__toggle ${menuOpen ? "navbar__toggle--open" : ""}`}
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle navigation"
+          aria-expanded={menuOpen}
         >
           <span className="hamburger__line hamburger__line--1"></span>
           <span className="hamburger__line hamburger__line--2"></span>

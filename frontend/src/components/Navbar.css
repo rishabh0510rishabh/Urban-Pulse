@@ -253,6 +253,24 @@
   width: 100%;
 }
 
+.nav__github-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.nav__github-icon {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.nav__github-btn:hover .nav__github-icon {
+  transform: scale(1.15);
+}
+
 .nav__logout-btn {
   background-color: transparent;
   color: #e74c3c;
