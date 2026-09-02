@@ -184,6 +184,8 @@ committeeSchema.methods.toJSON = function () {
   return obj;
 };
 
-const Committee = new mongoose.model("Committee", committeeSchema);
+committeeSchema.index({ committeeLocation: "2dsphere" });
+
+const Committee = mongoose.model("Committee", committeeSchema);
 
 module.exports = Committee;

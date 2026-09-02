@@ -46,7 +46,7 @@
 | :--- | :--- |
 | **Frontend** | React, React Router, Leaflet / Maps, Chart.js, Lucide Icons, Vanilla CSS Design System |
 | **Backend** | Node.js, Express.js, Passport.js (Local/Session Auth), Multer, Connect-Mongo |
-| **Database** | MongoDB Atlas / Mongoose |
+| **Database** | MongoDB Atlas / Mongoose ([Database Schema Spec](DATABASE_SCHEMA.md)) |
 | **AI / ML Engine** | Python, FastAPI, YOLOv8 (Ultralytics), PyTorch, OpenCV |
 | **Integrations** | Cloudinary (Image Storage), Mapbox (Geocoding), Nodemailer, Twilio, Razorpay |
 
