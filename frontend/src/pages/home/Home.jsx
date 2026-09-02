@@ -22,28 +22,29 @@ const createMarkerIcon = (status) => {
   });
 };
 
+const HERO_IMAGES = [
+  '/assets/HeroImg1.jpg',
+  '/assets/HeroImg2.jpg',
+  '/assets/HeroImg3.jpg'
+];
+
 export default function Home() {
   const navigate = useNavigate();
   const [allReports, setAllReports] = useState([]);
   const [franchisees, setFranchisees] = useState([]);
   const [events, setEvents] = useState([]);
-  const images = [
-    '/assets/HeroImg1.jpg',
-    '/assets/HeroImg2.jpg',
-    '/assets/HeroImg3.jpg'
-  ];
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
   useEffect(() => {
     const slideshowTimer = setInterval(() => {
-      setCurrentImgIndex((prev) => (prev + 1) % images.length);
+      setCurrentImgIndex((prev) => (prev + 1) % HERO_IMAGES.length);
     }, 5000);
     
     return () => clearInterval(slideshowTimer);
   }, []);
 
   const inlineHeroStyle = {
-    backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${images[currentImgIndex]})`,
+    backgroundImage: `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${HERO_IMAGES[currentImgIndex]})`,
     transition: 'background-image 1.5s ease-in-out',
     backgroundSize: 'cover',
     backgroundPosition: 'center'

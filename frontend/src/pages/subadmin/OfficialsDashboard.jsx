@@ -125,7 +125,7 @@ export default function OfficialsDashboard() {
 
   const assignReportToOsp = async (ospId) => {
     try {
-      const res = await api.post(`/reports/${selectedReportId}/assign`, {
+      await api.post(`/reports/${selectedReportId}/assign`, {
         ospId,
       });
 

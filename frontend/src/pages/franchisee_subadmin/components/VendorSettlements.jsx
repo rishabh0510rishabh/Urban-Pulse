@@ -27,7 +27,7 @@ function VendorSettlements() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await api.post("/waste-submission/vendor/settlement", {
+    await api.post("/waste-submission/vendor/settlement", {
       eventId: form.eventId,
       totalWeightKg: form.totalWeightKg,
       amountPaidToVendor: form.amountPaidToVendor,

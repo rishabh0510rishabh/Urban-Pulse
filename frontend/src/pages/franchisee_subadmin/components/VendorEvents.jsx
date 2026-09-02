@@ -28,7 +28,7 @@ function VendorEvents() {
       address: form.address,
     };
 
-    const res = await api.post("/waste-submission/vendor/events", payload);
+    await api.post("/waste-submission/vendor/events", payload);
 
     alert("Vendor Event Created Successfully!");
 

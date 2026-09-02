@@ -30,37 +30,6 @@ function Event() {
     getEvents();
   }, []);
 
-  const handleSignUp = async (id, e) => {
-    // stop propagation if event passed (button click)
-    if (e && e.stopPropagation) e.stopPropagation();
-
-    try {
-      const res = await api.post(`/events/${id}`);
-      const updatedEvent = res.data.event || res.data;
-      setEvents((prevEvents) =>
-        prevEvents.map((ev) => (ev._id === updatedEvent._id ? updatedEvent : ev))
-      );
-    } catch (err) {
-      console.error("Sign up error:", err);
-      alert("Failed to register. Please try again.");
-    }
-  };
-
-  const handleUnregister = async (id, e) => {
-    if (e && e.stopPropagation) e.stopPropagation();
-
-    try {
-      const res = await api.post(`/events/${id}/unregister`);
-      const updatedEvent = res.data.event || res.data;
-      setEvents((prevEvents) =>
-        prevEvents.map((ev) => (ev._id === updatedEvent._id ? updatedEvent : ev))
-      );
-    } catch (err) {
-      console.error("Unregister error:", err);
-      alert("Failed to unregister. Please try again.");
-    }
-  };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate();
@@ -89,8 +58,6 @@ function Event() {
           <div className="events-grid">
             {events.map((event) => {
               const { day, month, time } = formatDate(event.eventDateTime);
-              const isRegistered =
-                user && event?.registrations && event?.registrations.includes(user._id);
 
               return (
                 <div

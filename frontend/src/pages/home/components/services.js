@@ -1,4 +1,4 @@
-export default [
+const services = [
   {
     id: 1,
     icon: "📱",
@@ -130,3 +130,5 @@ export default [
     ],
   },
 ];
+
+export default services;

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import "./cfdash.css";
-import { TreeDeciduous, Car, Smartphone, Droplets, Zap } from 'lucide-react'; // Assuming you have lucide-react, or remove icons if not
 
 const CarbonFootprintDash = () => {
   const [wasteType, setWasteType] = useState("");
@@ -98,9 +97,7 @@ const CarbonFootprintDash = () => {
 
     // 2. Calculate Savings (If Recycled)
     // EPA data assumes these values are SAVED if recycled vs virgin production
-    const savedEmissions = totalEmissions; 
-    const savedEnergy = totalEnergy;
-    const savedWater = totalWater;
+    const savedEmissions = totalEmissions;
 
     // 3. Composting Logic (Specific for Food)
     const emissionsIfComposted = totalEmissions * 0.1; // 90% reduction

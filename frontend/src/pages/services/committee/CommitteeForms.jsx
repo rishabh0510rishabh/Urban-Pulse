@@ -46,7 +46,7 @@ function CommitteeForms() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post(
+      await api.post(
         "/committees/register",
         committeeRegistrationFormData
       );

@@ -68,7 +68,7 @@ function WasteTypes() {
     setAdding(true);
 
     try {
-      const res = await api.post("/recycle/types", newType);
+      await api.post("/recycle/types", newType);
 
       // Refresh list
       const updated = await api.get("/recycle/types");

@@ -16,12 +16,13 @@ function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const checkUserSignedUp = (eventObj) => {
-    return eventObj.registrations?.some(
-      (reg) => reg.user === user?._id || reg.user?._id === user?._id
-    );
-  };
   useEffect(() => {
+    const checkUserSignedUp = (eventObj) => {
+      return eventObj.registrations?.some(
+        (reg) => reg.user === user?._id || reg.user?._id === user?._id
+      );
+    };
+
     const fetchEvent = async () => {
       try {
         const res = await api.get(`/events/${id}`);
@@ -38,7 +39,7 @@ function EventDetail() {
     };
 
     fetchEvent();
-  }, [id, navigate]);
+  }, [id, navigate, user?._id]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

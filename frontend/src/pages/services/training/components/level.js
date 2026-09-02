@@ -1,6 +1,4 @@
 // src/data/levels.js
-import React from "react";
-import "./level.css";
 
 export const LEVELS = [
   {

@@ -20,8 +20,6 @@ export default function CommitteeDashboard() {
   const [committeeReports, setCommitteeReports] = useState([]);
   const [committeeEvents, setCommitteeEvents] = useState([]);
   const [committeeUsers, setCommitteeUsers] = useState([]);
-  const [allReports, setAllReports] = useState([]);
-  const [allEvents, setAllEvents] = useState([]);
   const [allFranchisees, setAllFranchisees] = useState([]);
   const [topReporter, setTopReporter] = useState(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);

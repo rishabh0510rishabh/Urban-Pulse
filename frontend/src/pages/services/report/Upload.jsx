@@ -11,7 +11,6 @@ export default function Upload() {
   const [stream, setStream] = useState(null);
   const [remarks, setRemarks] = useState("");
   const [activeTab, setActiveTab] = useState("camera"); // State for tabs
-  const [location, setLocation] = useState({ latitude: null, longitude: null }); // state for user location
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [loading, setLoading] = useState(false);

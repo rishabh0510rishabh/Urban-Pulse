@@ -1,7 +1,6 @@
 import React from "react";
 import "./training.css";
 
-import Chatbot from "./components/Chatbot";
 import { LEVELS } from "./components/level"; // data array
 import { Link } from "react-router-dom"; // navigation for each level card
 
