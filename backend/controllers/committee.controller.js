@@ -21,7 +21,7 @@ exports.approveCommitteee = async (req, res) => {
   const { cid } = req.params;
   const committeeToBeApproved = await Committee.findById(cid);
   committeeToBeApproved.isCommitteeVerified = true;
-  committeeToBeApproved.save();
+  await committeeToBeApproved.save();
   res.json({ approvedCommittee: committeeToBeApproved });
 };
 
@@ -29,7 +29,7 @@ exports.rejectCommittee = async (req, res) => {
   const { cid } = req.params;
   const committeeToBeRejected = await Committee.findById(cid);
   committeeToBeRejected.isCommitteeVerified = false;
-  committeeToBeRejected.save();
+  await committeeToBeRejected.save();
   res.json({ approvedCommittee: committeeToBeRejected });
 };
 

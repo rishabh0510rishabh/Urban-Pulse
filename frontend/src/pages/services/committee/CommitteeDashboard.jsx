@@ -113,8 +113,6 @@ export default function CommitteeDashboard() {
         const events = eventsRes.data || [];
         const franchisees = franchiseesRes.data.franchisees || [];
 
-        setAllReports(reports);
-        setAllEvents(events);
         setAllFranchisees(franchisees);
 
         // Calculate report analytics

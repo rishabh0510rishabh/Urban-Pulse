@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Event.css";
 import api from "../../../utils/axiosConfig";
-import { useAuth } from "../../../components/AuthContext";
 
 function Event() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

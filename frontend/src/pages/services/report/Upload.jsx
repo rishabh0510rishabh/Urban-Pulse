@@ -87,7 +87,12 @@ export default function Upload() {
       }
       const formData = new FormData();
       formData.append("file", blob, "captured-image.jpeg");
-      const YOLO_API_BASE = process.env.REACT_APP_API_URL_YOLO_LOCAL;
+      const YOLO_API_BASE =
+        process.env.REACT_APP_API_URL_YOLO ||
+        (process.env.REACT_APP_ENVIRONMENT === "production"
+          ? process.env.REACT_APP_API_URL_YOLO_PROD
+          : process.env.REACT_APP_API_URL_YOLO_LOCAL) ||
+        "http://localhost:8000";
       const response = await axios.post(`${YOLO_API_BASE}/scan`, formData);
       return response.data?.image_url || null;
     } catch (e) {
@@ -143,15 +148,11 @@ export default function Upload() {
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLocation({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-        });
         submitReport(
           pos.coords.latitude,
           pos.coords.longitude,
           modifiedImageUrl
-        ); // main submit function transferred to submitReport
+        );
       },
       (err) => {
         console.log("Location permission denied: ", err);

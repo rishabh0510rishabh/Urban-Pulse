@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./EventDetail.css";
 import api from "../../../utils/axiosConfig";
@@ -16,13 +16,16 @@ function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    const checkUserSignedUp = (eventObj) => {
-      return eventObj.registrations?.some(
+  const checkUserSignedUp = useCallback(
+    (eventObj) => {
+      return eventObj?.registrations?.some(
         (reg) => reg.user === user?._id || reg.user?._id === user?._id
       );
-    };
+    },
+    [user?._id]
+  );
 
+  useEffect(() => {
     const fetchEvent = async () => {
       try {
         const res = await api.get(`/events/${id}`);
@@ -39,7 +42,7 @@ function EventDetail() {
     };
 
     fetchEvent();
-  }, [id, navigate, user?._id]);
+  }, [id, navigate, checkUserSignedUp]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

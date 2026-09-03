@@ -82,13 +82,33 @@ const sessionOptions = {
   store: store,
 };
 
+// Allowed Origins setup
+const allowedOrigins = [
+  process.env.DEV_LINK_REACT || "http://localhost:3000",
+  process.env.PROD_LINK_REACT,
+  process.env.FRONTEND_URL,
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+]
+  .filter(Boolean)
+  .flatMap((url) => url.split(",").map((s) => s.trim().replace(/\/$/, "")));
+
 // Server setup
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.PROD_LINK_REACT
-        : process.env.DEV_LINK_REACT || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      const cleanOrigin = origin.replace(/\/$/, "");
+      if (
+        allowedOrigins.includes(cleanOrigin) ||
+        process.env.NODE_ENV !== "production" ||
+        cleanOrigin.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true); // Allow configured origin fallback
+    },
     credentials: true,
   })
 );

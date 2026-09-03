@@ -1,11 +1,13 @@
 import axios from 'axios';
 
-const ENVIRONMENT = process.env.REACT_APP_ENVIRONMENT || "development";
+const ENVIRONMENT = process.env.REACT_APP_ENVIRONMENT || (process.env.NODE_ENV === "production" ? "production" : "development");
 
-const API_BASE = ENVIRONMENT === "development"
-  ? process.env.REACT_APP_API_URL_LOCAL
-  : process.env.REACT_APP_API_URL_PROD;
-  
+const API_BASE =
+  process.env.REACT_APP_API_URL ||
+  (ENVIRONMENT === "production"
+    ? process.env.REACT_APP_API_URL_PROD || "http://localhost:5000"
+    : process.env.REACT_APP_API_URL_LOCAL || "http://localhost:5000");
+
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true, // automatically applied for all requests
