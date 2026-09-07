@@ -69,7 +69,11 @@ exports.getEventById = async (req, res) => {
 exports.registerForEvent = async (req, res) => {
   try {
     const { id: eventId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "You must be logged in to register for an event" });
+    }
 
     const { participants, experience, notes } = req.body;
 
@@ -104,7 +108,7 @@ exports.registerForEvent = async (req, res) => {
     await event.save();
 
     // 5. Email & SMS Notification
-    const userName = req.user.name;
+    const userName = req.user.name || req.user.fname || req.user.username || "Community Member";
     const userEmail = req.user.email;
     const userPhone = req.user.phone;
 
@@ -124,14 +128,20 @@ exports.registerForEvent = async (req, res) => {
 
       <br/>
       <p>Thank you for contributing towards a cleaner community!</p>
-      <p>– Aspirely Team</p>
+      <p>– Urban Pulse Team</p>
     `;
 
-    await sendEmail(
-      userEmail,
-      `You're Registered for ${event.eventName}!`,
-      emailHTML
-    );
+    try {
+      if (userEmail) {
+        await sendEmail(
+          userEmail,
+          `You're Registered for ${event.eventName}!`,
+          emailHTML
+        );
+      }
+    } catch (emailErr) {
+      console.warn("Could not send event registration email:", emailErr.message);
+    }
 
     // -- Disabled SMS For now --
     // await sendSMS(
@@ -172,7 +182,11 @@ exports.markEventCompleted = async (req, res) => {
 exports.unregisterFromEvent = async (req, res) => {
   try {
     const { id: eventId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     // 1. Ensure event exists
     const event = await Event.findById(eventId);
@@ -203,7 +217,7 @@ exports.unregisterFromEvent = async (req, res) => {
     await event.save();
 
     // 5. Email + SMS Notification on Unregister
-    const userName = req.user.name;
+    const userName = req.user.name || req.user.fname || req.user.username || "Community Member";
     const userEmail = req.user.email;
     const userPhone = req.user.phone;
 
@@ -217,14 +231,20 @@ exports.unregisterFromEvent = async (req, res) => {
 
       <br/>
       <p>If this was a mistake, you can always register again anytime.</p>
-      <p>– Aspirely Team</p>
+      <p>– Urban Pulse Team</p>
     `;
 
-    await sendEmail(
-      userEmail,
-      `You Have Unregistered from ${event.eventName}`,
-      emailHTML
-    );
+    try {
+      if (userEmail) {
+        await sendEmail(
+          userEmail,
+          `You Have Unregistered from ${event.eventName}`,
+          emailHTML
+        );
+      }
+    } catch (emailErr) {
+      console.warn("Could not send unregister email:", emailErr.message);
+    }
     // -- Disabled SMS For now --
     // await sendSMS(
     //   userPhone,

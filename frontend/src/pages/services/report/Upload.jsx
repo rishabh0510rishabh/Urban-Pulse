@@ -2,12 +2,12 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import api from "../../../utils/axiosConfig";
-// Import the new stylesheet for this component
 import "./Upload.css";
 
 export default function Upload() {
   const navigate = useNavigate();
-  const [image, setImage] = useState(null);
+  const [image, setImage] = useState(null); // URL for preview
+  const [fileObject, setFileObject] = useState(null); // Actual File object
   const [stream, setStream] = useState(null);
   const [remarks, setRemarks] = useState("");
   const [activeTab, setActiveTab] = useState("camera"); // State for tabs
@@ -50,42 +50,32 @@ export default function Upload() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/png");
-    setImage(dataUrl);
-    stopCamera(); // Stop camera after capture for better UX
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+        setFileObject(file);
+        setImage(URL.createObjectURL(file));
+        stopCamera(); // Stop camera after capture for better UX
+      }
+    }, "image/jpeg", 0.9);
   };
 
   // --- File Upload Logic ---
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setFileObject(file);
       setImage(URL.createObjectURL(file));
       stopCamera(); // Ensure camera is off if user uploads
     }
   };
 
-  // (handleSubmit and helper functions remain the same)
-  function dataURLtoBlob(dataURL) {
-    const [metadata, base64Data] = dataURL.split(",");
-    const mimeType = metadata.match(/:(.*?);/)[1];
-    const binaryString = atob(base64Data);
-    const length = binaryString.length;
-    const bytes = new Uint8Array(length);
-    for (let i = 0; i < length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return new Blob([bytes], { type: mimeType });
-  }
-
-  const validateImageWithYolo = async (imageUrl) => {
+  const validateImageWithYolo = async () => {
     try {
-      let blob;
-      if (imageUrl.startsWith("data:")) {
-        blob = dataURLtoBlob(imageUrl);
-      } else {
-        blob = await fetch(imageUrl).then((res) => res.blob());
-      }
+      if (!fileObject) return null;
       const formData = new FormData();
+<<<<<<< HEAD
       formData.append("file", blob, "captured-image.jpeg");
       const YOLO_API_BASE =
         process.env.REACT_APP_API_URL_YOLO ||
@@ -93,6 +83,10 @@ export default function Upload() {
           ? process.env.REACT_APP_API_URL_YOLO_PROD
           : process.env.REACT_APP_API_URL_YOLO_LOCAL) ||
         "http://localhost:8000";
+=======
+      formData.append("file", fileObject);
+      const YOLO_API_BASE = process.env.REACT_APP_API_URL_YOLO_LOCAL;
+>>>>>>> db
       const response = await axios.post(`${YOLO_API_BASE}/scan`, formData);
       return response.data?.image_url || null;
     } catch (e) {
@@ -104,12 +98,12 @@ export default function Upload() {
   const submitReport = async (lat, lng, modifiedImageUrl) => {
     setLoading(true);
     try {
-      const ogBlob = await fetch(image).then((res) => res.blob());
       const modifiedBlob = await fetch(modifiedImageUrl).then((res) =>
         res.blob()
       );
+      
       const formData = new FormData();
-      formData.append("image", ogBlob, "capture.png");
+      formData.append("image", fileObject);
       formData.append("image2", modifiedBlob, "capture-2.png");
       formData.append("remarks", remarks);
       formData.append("latitude", lat);
@@ -137,15 +131,18 @@ export default function Upload() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!image) {
+    if (!image || !fileObject) {
       alert("Please capture or select an image first!");
       return;
     }
-    const modifiedImageUrl = await validateImageWithYolo(image);
+    
+    // RE-ENABLE YOLO
+    const modifiedImageUrl = await validateImageWithYolo();
     if (!modifiedImageUrl) {
-      alert("Garbage not detected or failed to process image.");
+      alert("Garbage not detected or failed to process image. Make sure the image clearly shows garbage.");
       return;
     }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         submitReport(
@@ -212,7 +209,7 @@ export default function Upload() {
         </button>
       </div>
 
-      {/* --- REST OF YOUR EXISTING CONTENT (unchanged) --- */}
+      {/* --- REST OF YOUR EXISTING CONTENT --- */}
       {activeTab === "camera" && (
         <div className="upload__content-panel">
           <video

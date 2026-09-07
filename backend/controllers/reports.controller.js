@@ -61,13 +61,18 @@ exports.createReport = async (req, res) => {
   const imageUrl1 = await uploadBufferToCloudinary(req.files.image[0].buffer);
   const imageUrl2 = await uploadBufferToCloudinary(req.files.image2[0].buffer);
 
+  const userId = req.user?._id;
+  if (!userId) {
+    return res.status(401).json({ message: "You must be logged in to create a report" });
+  }
+
   // ------------------- STEP 4: Save report -------------------
   const newReport = await Report.create({
     reportImg: imageUrl1,
     reportYoloImg: imageUrl2,
     remarks,
     status: "pending",
-    reportOwner: req.user._id,
+    reportOwner: userId,
     location: {
       type: "Point",
       coordinates: [Number(longitude), Number(latitude)],
@@ -75,10 +80,13 @@ exports.createReport = async (req, res) => {
   });
 
   // Update user
-  const user = req.user;
-  user.reports.push(newReport._id);
-  user.greenCoins = (user.greenCoins || 0) + 15;
-  await user.save();
+  const user = await User.findById(userId);
+  if (user) {
+    user.reports.push(newReport._id);
+    user.greencoins = (user.greencoins || 0) + 15;
+    user.points = (user.points || 0) + 15;
+    await user.save();
+  }
 
   return res.status(201).json({
     message: "Report created successfully!",
@@ -88,15 +96,22 @@ exports.createReport = async (req, res) => {
 
 // Fetch reports created by the logged-in user
 exports.getMyReports = async (req, res) => {
-  const user = await User.findById(req.user._id).populate("reports");
-  const userReports = user.reports;
+  const userId = req.user?._id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const user = await User.findById(userId).populate("reports");
+  const userReports = user ? user.reports : [];
   return res.json(userReports);
 };
 
 // get all reports assigned to OSPs
 exports.getReportsAssignedToOsp = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
     const reports = await Report.find({
       assignedTo: userId,
@@ -215,7 +230,20 @@ exports.assignReportToOsp = async (req, res) => {
 exports.ospResolveReport = async (req, res) => {
   try {
     const reportId = req.params.id;
-    const userId = req.user._id;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { latitude, longitude } = req.body;
+    if (!latitude || !longitude) {
+      return res.status(400).json({ message: "Location coordinates required to resolve report" });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: "An image is required to resolve report" });
+    }
 
     const report = await Report.findById(reportId);
 
@@ -238,7 +266,25 @@ exports.ospResolveReport = async (req, res) => {
         .json({ message: "Report must be in allotted state" });
     }
 
+    const uploadBufferToCloudinary = (buffer) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream((err, result) => {
+          if (err) reject(err);
+          else resolve(result.secure_url);
+        });
+        stream.end(buffer);
+      });
+    };
+
+    const resolvedImageUrl = await uploadBufferToCloudinary(req.file.buffer);
+
     report.status = "resolved";
+    report.resolvedImg = resolvedImageUrl;
+    report.resolvedLocation = {
+      type: "Point",
+      coordinates: [Number(longitude), Number(latitude)],
+    };
+
     await report.save();
 
     return res.status(200).json({

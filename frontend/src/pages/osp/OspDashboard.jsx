@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -18,6 +18,18 @@ export default function OspDashboard() {
   const [location, setLocation] = useState({ latitude: null, longitude: null });
   const [isOnDuty, setIsOnDuty] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Resolution Modal State
+  const [resolveModalOpen, setResolveModalOpen] = useState(false);
+  const [resolvingReportId, setResolvingReportId] = useState(null);
+  const [resolveImage, setResolveImage] = useState(null);
+  const [isResolving, setIsResolving] = useState(false);
+
+  // Camera State
+  const [useCamera, setUseCamera] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [stream, setStream] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,17 +71,102 @@ export default function OspDashboard() {
     }
   };
 
-  const markResolved = async (id) => {
-    try {
-      await api.post(`/reports/${id}/resolve`);
-      setAssignedReports((prev) =>
-        prev.map((r) => (r._id === id ? { ...r, status: "resolved" } : r))
-      );
-      alert("Report marked resolved!");
-    } catch (err) {
-      console.error(err);
-      alert("Failed to resolve report");
+  const openResolveModal = (id) => {
+    setResolvingReportId(id);
+    setResolveImage(null);
+    setUseCamera(false);
+    setResolveModalOpen(true);
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
     }
+    setUseCamera(false);
+  };
+
+  const closeResolveModal = () => {
+    stopCamera();
+    setResolveModalOpen(false);
+    setResolvingReportId(null);
+    setResolveImage(null);
+  };
+
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: { ideal: "environment" } } 
+      });
+      setStream(mediaStream);
+      setUseCamera(true);
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Could not access the camera. Please check permissions or ensure you have a connected camera.");
+    }
+  };
+
+  useEffect(() => {
+    if (useCamera && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [useCamera, stream]);
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext("2d");
+      canvasRef.current.width = videoRef.current.videoWidth;
+      canvasRef.current.height = videoRef.current.videoHeight;
+      context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+      
+      canvasRef.current.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
+          setResolveImage(file);
+          stopCamera();
+        }
+      }, "image/jpeg", 0.9);
+    }
+  };
+
+  const submitResolve = async () => {
+    if (!resolveImage) {
+      alert("Please upload or capture an image showing the resolved state.");
+      return;
+    }
+
+    setIsResolving(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const formData = new FormData();
+          formData.append("resolvedImage", resolveImage);
+          formData.append("latitude", pos.coords.latitude);
+          formData.append("longitude", pos.coords.longitude);
+
+          await api.post(`/reports/${resolvingReportId}/resolve`, formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          setAssignedReports((prev) =>
+            prev.map((r) => (r._id === resolvingReportId ? { ...r, status: "resolved" } : r))
+          );
+          alert("Report marked resolved!");
+          closeResolveModal();
+        } catch (err) {
+          console.error(err);
+          alert(err.response?.data?.message || "Failed to resolve report");
+        } finally {
+          setIsResolving(false);
+        }
+      },
+      () => {
+        alert("Enable location to resolve the report");
+        setIsResolving(false);
+      },
+      { enableHighAccuracy: true }
+    );
   };
 
   const mapReports = assignedReports.filter(
@@ -127,7 +224,7 @@ export default function OspDashboard() {
                   {r.status === "allotted" && (
                     <button
                       className="btn btn--secondary popup-btn"
-                      onClick={() => markResolved(r._id)}
+                      onClick={() => openResolveModal(r._id)}
                     >
                       Resolve
                     </button>
@@ -165,7 +262,7 @@ export default function OspDashboard() {
                   {r.status === "allotted" ? (
                     <button
                       className="btn btn--primary"
-                      onClick={() => markResolved(r._id)}
+                      onClick={() => openResolveModal(r._id)}
                     >
                       Mark Resolved
                     </button>
@@ -178,6 +275,91 @@ export default function OspDashboard() {
           </tbody>
         </table>
       </section>
+
+      {resolveModalOpen && (
+        <div className="modal-overlay" style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: "#fff", padding: "2rem", borderRadius: "8px", width: "90%", maxWidth: "500px", textAlign: "center", maxHeight: "90vh", overflowY: "auto"
+          }}>
+            <h3>Resolve Report</h3>
+            <p style={{ marginBottom: "1rem", color: "#666" }}>
+              Please provide a photo of the resolved area. Your location will be automatically captured to verify the fix.
+            </p>
+            
+            {!useCamera ? (
+              <div style={{ marginBottom: "1.5rem" }}>
+                {resolveImage && (
+                  <div style={{ marginBottom: "1rem" }}>
+                    <img src={URL.createObjectURL(resolveImage)} alt="Preview" style={{ maxWidth: "100%", maxHeight: "200px", borderRadius: "8px" }} />
+                    <button className="btn btn--secondary" onClick={() => setResolveImage(null)} style={{ display: "block", margin: "0.5rem auto" }}>
+                      Remove Image
+                    </button>
+                  </div>
+                )}
+                
+                {!resolveImage && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                    <button className="btn btn--primary" onClick={startCamera}>
+                      Take Photo with Camera
+                    </button>
+                    <div style={{ position: "relative", textAlign: "center" }}>
+                      <hr style={{ border: "1px solid #eee", margin: "1rem 0" }}/>
+                      <span style={{ position: "absolute", top: "-10px", left: "50%", transform: "translateX(-50%)", backgroundColor: "#fff", padding: "0 10px", color: "#888" }}>OR</span>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Upload File</label>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => setResolveImage(e.target.files[0])}
+                        style={{ width: "100%", padding: "0.5rem", border: "1px solid #ccc", borderRadius: "4px" }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ marginBottom: "1.5rem" }}>
+                <video 
+                  ref={videoRef} 
+                  autoPlay 
+                  playsInline
+                  style={{ width: "100%", borderRadius: "8px", backgroundColor: "#000", marginBottom: "1rem" }}
+                ></video>
+                <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
+                <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
+                  <button className="btn btn--secondary" onClick={stopCamera}>
+                    Cancel Camera
+                  </button>
+                  <button className="btn btn--primary" onClick={capturePhoto}>
+                    Capture Photo
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center", marginTop: "1rem", borderTop: "1px solid #eee", paddingTop: "1rem" }}>
+              <button 
+                className="btn btn--secondary" 
+                onClick={closeResolveModal}
+                disabled={isResolving}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn--primary" 
+                onClick={submitResolve}
+                disabled={isResolving || !resolveImage}
+              >
+                {isResolving ? "Uploading..." : "Submit Verification"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

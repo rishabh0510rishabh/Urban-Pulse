@@ -85,7 +85,9 @@ async def scan_image(request: Request, file: UploadFile = File(...)):
     annotated_image = result.plot()
 
     # 5. Save the annotated image
-    marked_filename = f"marked_{file.filename}"
+    # Ensure it's saved as .jpg so OpenCV doesn't fail on unsupported extensions
+    base_name = os.path.splitext(file.filename)[0]
+    marked_filename = f"marked_{base_name}.jpg"
     marked_path = os.path.join(UPLOAD_DIR, marked_filename)
     
     # Save the plotted image using OpenCV

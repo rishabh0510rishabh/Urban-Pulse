@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer.jsx";
 import NotFound from './components/NotFound.jsx';
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import { CommitteeAuthProvider } from "./components/CommitteeAuthContext.jsx";
 
 // Auth
@@ -56,6 +57,7 @@ import EventForm from "./pages/subadmin/event_form/EventForm.jsx";
 
 // Auth Provider
 import { AuthProvider } from "./components/AuthContext";
+
 function App() {
   return (
     <div>
@@ -63,45 +65,93 @@ function App() {
         <CommitteeAuthProvider>
           <Navbar />
           <Routes>
-            {/* -- Vendor Routes -- */}
-            <Route path="/Vendor" element={<Vendor />} />
-            {/* -- Authentication --*/}
+            {/* ── Public Routes ─────────────────────────────────────────── */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/otp" element={<Otp />} />
-            {/* -- User Profile --*/}
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/reports" element={<MyReports />} />
-            <Route path="/profile/recycle-requests" element={<MyRecycleRequests />} />
-            {/* -- Core Routes -- */}
-            <Route path="/upload" element={<Upload />} />
-            <Route path="/osp" element={<OspDashboard />} />
-            {/* - Committee Routes - */}
-            <Route path="/committee" element={<CommitteeForms />} />
-            <Route
-              path="/committee/dashboard"
-              element={<CommitteeDashboard />}
-            />
             <Route path="/events" element={<Event />} />
             <Route path="/events/:id" element={<EventDetail />} />
-            <Route path="/events/:id/signup" element={<EventSignUpForm />} />
-            <Route path="/recycle" element={<Recycle />} />
-            <Route path="/franchisee-dashboard" element={<FranchiseeDashboard />} />
-            <Route path="/shop" element={<Shop />} />
-            {/* -- Officials Routes -- */}
-            <Route path="/officials" element={<OfficialsDashboard />} />
-            <Route path="/officials/event/create" element={<EventForm />} />
-            <Route path="/officials/franchisee/create" element={<FranchiseeForm />} />
-            <Route
-              path="/officials/report/:id"
-              element={<OfficialsReportDisplay />}
-            />
             <Route path="/training" element={<Training />} />
             <Route path="/training/levels/:id" element={<LevelDetail />} />
             <Route path="/training/game" element={<RecyclingGame />} />
-            <Route path="/cfdash" element={<CarbonFootprintDash />} />
-            <Route path="*" element={<NotFound/>}/>
+            <Route path="/shop" element={<Shop />} />
+
+            {/* ── Any Logged-in User ────────────────────────────────────── */}
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/profile/reports" element={<ProtectedRoute><MyReports /></ProtectedRoute>} />
+            <Route path="/profile/recycle-requests" element={<ProtectedRoute><MyRecycleRequests /></ProtectedRoute>} />
+            <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
+            <Route path="/committee" element={<ProtectedRoute><CommitteeForms /></ProtectedRoute>} />
+            <Route path="/committee/dashboard" element={<ProtectedRoute><CommitteeDashboard /></ProtectedRoute>} />
+            <Route path="/events/:id/signup" element={<ProtectedRoute><EventSignUpForm /></ProtectedRoute>} />
+            <Route path="/recycle" element={<ProtectedRoute><Recycle /></ProtectedRoute>} />
+            <Route path="/cfdash" element={<ProtectedRoute><CarbonFootprintDash /></ProtectedRoute>} />
+
+            {/* ── OSP Only ──────────────────────────────────────────────── */}
+            <Route
+              path="/osp"
+              element={
+                <ProtectedRoute roles={["osp"]}>
+                  <OspDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── Vendor Only ───────────────────────────────────────────── */}
+            <Route
+              path="/vendor"
+              element={
+                <ProtectedRoute roles={["vendor"]}>
+                  <Vendor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/franchisee-dashboard"
+              element={
+                <ProtectedRoute roles={["vendor"]}>
+                  <FranchiseeDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── Admin / Official Only ─────────────────────────────────── */}
+            <Route
+              path="/officials"
+              element={
+                <ProtectedRoute roles={["admin", "official"]}>
+                  <OfficialsDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/officials/event/create"
+              element={
+                <ProtectedRoute roles={["admin", "official"]}>
+                  <EventForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/officials/franchisee/create"
+              element={
+                <ProtectedRoute roles={["admin", "official"]}>
+                  <FranchiseeForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/officials/report/:id"
+              element={
+                <ProtectedRoute roles={["admin", "official"]}>
+                  <OfficialsReportDisplay />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* ── 404 ───────────────────────────────────────────────────── */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
         </CommitteeAuthProvider>

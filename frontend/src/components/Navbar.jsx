@@ -64,10 +64,11 @@ export default function Navbar() {
     { to: "/login", label: "Login", type: "guest" },
     { to: "/signup", label: "Signup", type: "guest" },
     { to: "/profile", label: "Profile", type: "user" },
-    { to: "/osp", label: "OSP", type: "user" },
-    { to: "/franchisee-dashboard", label: "Franchisee Dashboard", type: "user" },
-    { to: "/officials", label: "Officials", type: "user" },
-    { to: "/vendor", label: "Vendor", type: "user" },
+    // Role-specific links
+    { to: "/osp", label: "OSP Dashboard", roles: ["osp"] },
+    { to: "/franchisee-dashboard", label: "Franchisee Dashboard", roles: ["vendor"] },
+    { to: "/vendor", label: "Vendor Panel", roles: ["vendor"] },
+    { to: "/officials", label: "Officials", roles: ["admin", "official"] },
   ];
 
   const serviceLinks = [
@@ -81,10 +82,13 @@ export default function Navbar() {
 
   const filteredLinks = navLinks.filter(link => {
     if (link.type === "always") return true;
-    if (user && link.type === "user") return true;
     if (!user && link.type === "guest") return true;
+    if (user && link.type === "user") return true;
+    // Role-specific: only show if user has one of the required roles
+    if (user && link.roles && link.roles.includes(user.role)) return true;
     return false;
   });
+
 
   const isServiceActive = serviceLinks.some(link => location.pathname === link.to);
 
