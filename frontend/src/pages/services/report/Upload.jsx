@@ -75,18 +75,13 @@ export default function Upload() {
     try {
       if (!fileObject) return null;
       const formData = new FormData();
-<<<<<<< HEAD
-      formData.append("file", blob, "captured-image.jpeg");
+      formData.append("file", fileObject);
       const YOLO_API_BASE =
         process.env.REACT_APP_API_URL_YOLO ||
         (process.env.REACT_APP_ENVIRONMENT === "production"
           ? process.env.REACT_APP_API_URL_YOLO_PROD
           : process.env.REACT_APP_API_URL_YOLO_LOCAL) ||
         "http://localhost:8000";
-=======
-      formData.append("file", fileObject);
-      const YOLO_API_BASE = process.env.REACT_APP_API_URL_YOLO_LOCAL;
->>>>>>> db
       const response = await axios.post(`${YOLO_API_BASE}/scan`, formData);
       return response.data?.image_url || null;
     } catch (e) {
