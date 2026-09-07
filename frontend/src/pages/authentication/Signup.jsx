@@ -47,7 +47,7 @@ export default function Signup() {
     }
   };
   
-  const today = new Date('2025-10-12T23:21:51Z').toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0];
 
   return (
     <main className="auth-page">

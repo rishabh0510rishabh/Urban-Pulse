@@ -3,13 +3,31 @@ const Order = require("../schemas/Order.js");
 const crypto = require("crypto");
 const Razorpay = require("razorpay");
 
-exports.getAllItems = async (req, res) => {};
-exports.getSpecificItem = async (req, res) => {};
+exports.getAllItems = async (req, res) => {
+  return res.status(200).json({ success: true, message: "Shop items list", items: [] });
+};
+
+exports.getSpecificItem = async (req, res) => {
+  return res.status(200).json({ success: true, item: null });
+};
 
 exports.addItemToCart = async (req, res) => {
-  const { userId, item } = req.body;
+  const userId = req.body.userId || req.user?._id;
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "User identification required" });
+  }
+
+  const { item } = req.body;
+  if (!item || !item.id) {
+    return res.status(400).json({ success: false, message: "Item details required" });
+  }
 
   const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  if (!user.cart) user.cart = [];
 
   // Check if item exists
   const existingItem = user.cart.find((cartItem) => cartItem.id === item.id);
@@ -29,18 +47,30 @@ exports.addItemToCart = async (req, res) => {
   });
 };
 
-exports.getUserCart = async(req, res) => {
-  const userId = req.user._id;
-  const userWithCart = await User.findById(userId).populate("cart");
-  res.json(userWithCart.cart);
-}
+exports.getUserCart = async (req, res) => {
+  const userId = req.user?._id;
+  if (!userId) {
+    return res.status(200).json([]);
+  }
+  const userWithCart = await User.findById(userId);
+  return res.json(userWithCart ? userWithCart.cart || [] : []);
+};
 
 exports.emptyUserCart = async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const userId = req.user?._id || req.body.userId;
+  if (!userId) {
+    return res.status(200).json({
+      success: true,
+      message: "Cart emptied successfully",
+      cart: [],
+    });
+  }
+
+  const user = await User.findById(userId);
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "User not found"
+      message: "User not found",
     });
   }
   user.cart = [];
@@ -48,16 +78,24 @@ exports.emptyUserCart = async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Cart emptied successfully",
-    cart: user.cart
+    cart: user.cart,
   });
-}
+};
 
 exports.removeItemFromCart = async (req, res) => {
-  const { userId, itemId } = req.body;
+  const userId = req.body.userId || req.user?._id;
+  const { itemId } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "User identification required" });
+  }
 
   const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
 
-  user.cart = user.cart.filter((item) => item.id !== itemId);
+  user.cart = (user.cart || []).filter((item) => item.id !== itemId);
 
   await user.save();
 
@@ -69,11 +107,19 @@ exports.removeItemFromCart = async (req, res) => {
 };
 
 exports.increaseItemQty = async (req, res) => {
-  const { userId, itemId } = req.body;
+  const userId = req.body.userId || req.user?._id;
+  const { itemId } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "User identification required" });
+  }
 
   const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
 
-  const item = user.cart.find((i) => i.id === itemId);
+  const item = (user.cart || []).find((i) => i.id === itemId);
 
   if (!item) {
     return res
@@ -93,11 +139,19 @@ exports.increaseItemQty = async (req, res) => {
 };
 
 exports.decreaseItemQty = async (req, res) => {
-  const { userId, itemId } = req.body;
+  const userId = req.body.userId || req.user?._id;
+  const { itemId } = req.body;
+
+  if (!userId) {
+    return res.status(401).json({ success: false, message: "User identification required" });
+  }
 
   const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
 
-  const item = user.cart.find((i) => i.id === itemId);
+  const item = (user.cart || []).find((i) => i.id === itemId);
 
   if (!item) {
     return res

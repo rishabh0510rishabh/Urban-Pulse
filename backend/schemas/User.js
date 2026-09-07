@@ -124,6 +124,34 @@ const userSchema = new mongoose.Schema(
 
 userSchema.plugin(passportLocalMongoose);
 
+// Virtual for full name
+userSchema.virtual("name").get(function () {
+  return `${this.fname || ""} ${this.lname || ""}`.trim() || this.username;
+});
+
+// Virtual for greenCoins (syncing camelCase with lowercase greencoins)
+userSchema
+  .virtual("greenCoins")
+  .get(function () {
+    return this.greencoins;
+  })
+  .set(function (val) {
+    this.greencoins = val;
+  });
+
+userSchema.set("toJSON", {
+  virtuals: true,
+  transform: (doc, ret) => {
+    delete ret.hash;
+    delete ret.salt;
+    delete ret.otp;
+    delete ret.otpExpires;
+    return ret;
+  },
+});
+userSchema.set("toObject", { virtuals: true });
+
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;
+

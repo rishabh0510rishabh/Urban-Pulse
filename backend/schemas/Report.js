@@ -20,6 +20,19 @@ const reportSchema = new mongoose.Schema(
         required: true,
       },
     },
+    resolvedImg: {
+      type: String,
+    },
+    resolvedLocation: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+      },
+    },
     remarks: {
       type: String,
       default: "NA",

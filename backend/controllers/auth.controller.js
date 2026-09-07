@@ -81,19 +81,23 @@ exports.sendOtp = async (req, res) => {
   await tempUser.save();
 
   // Send OTP mail
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.OTP_MAIL,
-      pass: process.env.OTP_PASS,
-    },
-  });
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.OTP_MAIL,
+        pass: process.env.OTP_PASS,
+      },
+    });
 
-  await transporter.sendMail({
-    to: email,
-    subject: "Swachhata | Your OTP Code",
-    text: `Your OTP is: ${otp}`,
-  });
+    await transporter.sendMail({
+      to: email,
+      subject: "Swachhata | Your OTP Code",
+      text: `Your OTP is: ${otp}`,
+    });
+  } catch (emailErr) {
+    console.warn("Could not send OTP email via SMTP:", emailErr.message);
+  }
 
   return res.status(200).json({ message: "OTP sent to email" });
 };
@@ -134,77 +138,111 @@ exports.verifyOtp = async (req, res) => {
 
 // Register new user
 exports.signUp = async (req, res) => {
-  const {
-    fname,
-    lname,
-    email,
-    username,
-    password,
-    gender,
-    dob,
-    address,
-    phone,
-    aadhar,
-  } = req.body;
+  try {
+    const {
+      fname,
+      lname,
+      email,
+      username,
+      password,
+      gender,
+      dob,
+      address,
+      phone,
+      aadhar,
+    } = req.body;
 
-  const role = "user";
-  console.log("login invoked!");
-  
-  // Check email existence
-  const existingEmail = await User.findOne({
-    email: email.trim().toLowerCase(),
-  });
-  if (existingEmail) {
-    return res.status(409).json({ message: "Email already registered." });
-  }
+    const role = "user";
 
-  // Check username existence
-  const existingUsername = await User.findOne({
-    username: username.trim().toLowerCase(),
-  });
-  if (existingUsername) {
-    return res.status(409).json({ message: "Username already taken." });
-  }
-
-  // Create new user
-  const newUser = new User({
-    fname: fname.trim(),
-    lname: lname.trim(),
-    email: email.trim().toLowerCase(),
-    username: username.trim().toLowerCase(),
-    gender,
-    dob,
-    phone: phone.trim(),
-    aadhar: aadhar.trim(),
-    address,
-    role,
-  });
-
-  // Hash password using passport-local-mongoose
-  await newUser.setPassword(password);
-  await newUser.save();
-
-  return res.status(201).json({ message: "User successfully registered!" });
-};
-
-// Login user using passport local
-exports.loginUser = (req, res, next) => {
-  if (req.body.username) {
-    req.body.username = req.body.username.trim().toLowerCase();
-  }
-
-  passport.authenticate("local", (err, user, info) => {
-    if (err) return next(err);
-
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    // Check email existence
+    const existingEmail = await User.findOne({
+      email: email.trim().toLowerCase(),
+    });
+    if (existingEmail) {
+      return res.status(409).json({ message: "Email already registered." });
     }
 
-    req.logIn(user, (err) => {
-      if (err) return next(err);
-      res.status(200).json({ message: "Login successful!", user });
+    // Check username existence
+    const existingUsername = await User.findOne({
+      username: username.trim().toLowerCase(),
     });
-  })(req, res, next);
+    if (existingUsername) {
+      return res.status(409).json({ message: "Username already taken." });
+    }
+
+    // Check phone existence
+    const existingPhone = await User.findOne({ phone: phone.trim() });
+    if (existingPhone) {
+      return res.status(409).json({ message: "Phone number already registered." });
+    }
+
+    // Check aadhar existence
+    const existingAadhar = await User.findOne({ aadhar: aadhar.trim() });
+    if (existingAadhar) {
+      return res.status(409).json({ message: "Aadhar number already registered." });
+    }
+
+    // Create new user
+    const newUser = new User({
+      fname: fname.trim(),
+      lname: lname.trim(),
+      email: email.trim().toLowerCase(),
+      username: username.trim().toLowerCase(),
+      gender,
+      dob,
+      phone: phone.trim(),
+      aadhar: aadhar.trim(),
+      address,
+      role,
+      isOtpVerified: true, // Direct signup (no OTP step in frontend)
+    });
+
+    // Hash password using passport-local-mongoose
+    await newUser.setPassword(password);
+    await newUser.save();
+
+    return res.status(201).json({ message: "User successfully registered!" });
+  } catch (err) {
+    if (err.code === 11000) {
+      const duplicateField = Object.keys(err.keyPattern || {})[0] || "Field";
+      return res.status(409).json({
+        message: `An account with this ${duplicateField} already exists.`,
+      });
+    }
+    return res.status(400).json({ message: err.message || "Registration failed" });
+  }
+};
+
+// Login user using passport local (supports both username and email)
+exports.loginUser = async (req, res, next) => {
+  try {
+    if (req.body.username) {
+      const input = req.body.username.trim().toLowerCase();
+      if (input.includes("@")) {
+        const userByEmail = await User.findOne({ email: input });
+        if (userByEmail) {
+          req.body.username = userByEmail.username;
+        }
+      } else {
+        req.body.username = input;
+      }
+    }
+
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
+
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      req.logIn(user, (err) => {
+        if (err) return next(err);
+        res.status(200).json({ message: "Login successful!", user });
+      });
+    })(req, res, next);
+  } catch (err) {
+    next(err);
+  }
 };
 
 // Logout user

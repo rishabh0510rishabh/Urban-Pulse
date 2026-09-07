@@ -18,19 +18,33 @@ exports.getAllCommittees = async (req, res) => {
 };
 
 exports.approveCommitteee = async (req, res) => {
-  const { cid } = req.params;
+  const cid = req.params.cid || req.body.cid;
+  if (!cid) {
+    return res.status(400).json({ message: "Committee ID (cid) is required" });
+  }
   const committeeToBeApproved = await Committee.findById(cid);
+  if (!committeeToBeApproved) {
+    return res.status(404).json({ message: "Committee not found" });
+  }
   committeeToBeApproved.isCommitteeVerified = true;
-  committeeToBeApproved.save();
-  res.json({ approvedCommittee: committeeToBeApproved });
+  committeeToBeApproved.committeeStatus = "APPROVED";
+  await committeeToBeApproved.save();
+  return res.json({ approvedCommittee: committeeToBeApproved });
 };
 
 exports.rejectCommittee = async (req, res) => {
-  const { cid } = req.params;
+  const cid = req.params.cid || req.body.cid;
+  if (!cid) {
+    return res.status(400).json({ message: "Committee ID (cid) is required" });
+  }
   const committeeToBeRejected = await Committee.findById(cid);
+  if (!committeeToBeRejected) {
+    return res.status(404).json({ message: "Committee not found" });
+  }
   committeeToBeRejected.isCommitteeVerified = false;
-  committeeToBeRejected.save();
-  res.json({ approvedCommittee: committeeToBeRejected });
+  committeeToBeRejected.committeeStatus = "REJECTED";
+  await committeeToBeRejected.save();
+  return res.json({ rejectedCommittee: committeeToBeRejected });
 };
 
 exports.registerCommittee = async (req, res) => {
@@ -116,16 +130,20 @@ exports.registerCommittee = async (req, res) => {
       isCommitteeVerified: false,
     });
 
-    const dbUser = await User.findById(req.user._id);
-    if (!dbUser) {
-      return res.status(401).json({ message: "User not found" });
+    let dbUser = null;
+    if (req.user?._id) {
+      dbUser = await User.findById(req.user._id);
+    } else if (leaderEmail) {
+      dbUser = await User.findOne({ email: leaderEmail.trim().toLowerCase() });
     }
 
-    committee.members.push(dbUser._id);
-    dbUser.committee = committee._id;
+    if (dbUser) {
+      committee.members.push(dbUser._id);
+      dbUser.committee = committee._id;
+      await dbUser.save();
+    }
 
     await committee.save();
-    await dbUser.save();
 
     const emailHTML = `
       <h2>Committee Registration Received</h2>
@@ -137,10 +155,14 @@ exports.registerCommittee = async (req, res) => {
       <p>Use this ID to check your committee status.</p>
       <br/>
       <p>We will contact you soon regarding verification and approval.</p>
-      <p>Regards,<br/>Aspirely Team</p>
+      <p>Regards,<br/>Urban Pulse Team</p>
     `;
 
-    await sendEmail(leaderEmail, "Committee Registration Received", emailHTML);
+    try {
+      await sendEmail(leaderEmail, "Committee Registration Received", emailHTML);
+    } catch (emailErr) {
+      console.warn("Could not send committee registration email:", emailErr.message);
+    }
 
     // await sendSMS(
     //   leaderPhone,
@@ -208,13 +230,23 @@ exports.loginCommittee = async (req, res) => {
 
 // Get committee details (protected route)
 exports.getCommitteeProfile = async (req, res) => {
-  const committee = await Committee.findById(req.user.committeeId).populate("members");
+  const committeeId = req.user?.committeeId || req.user?._id;
+  if (!committeeId) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const committee = await Committee.findById(committeeId).populate("members");
+  if (!committee) {
+    return res.status(404).json({ message: "Committee not found" });
+  }
   return res.json({ committee });
 };
 
 exports.getCommitteeStatus = async (req, res) => {
   const { id } = req.params;
   const committeeToBeChecked = await Committee.findById(id);
+  if (!committeeToBeChecked) {
+    return res.status(404).json({ message: "Committee not found" });
+  }
   const { isKycVerified, isCommitteeVerified, committeeStatus, committeeName } =
     committeeToBeChecked;
   return res.json({

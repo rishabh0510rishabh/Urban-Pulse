@@ -1,20 +1,25 @@
 const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync");
+const { isLoggedIn, requireRole } = require("../utils/middlewares");
 
 const shopController = require('../controllers/shop.controller.js');
 
+// Browse shop — public
 router.get('/', wrapAsync(shopController.getAllItems));
-router.get('/user-cart', wrapAsync(shopController.getUserCart));
-router.delete('/empty-cart', wrapAsync(shopController.emptyUserCart));
-// helper route to create rzp order with details for demonstrating a working model
-router.post('/create-rzp-order', wrapAsync(shopController.createRazorpayOrder));
-router.post('/verify-rzp-payment', wrapAsync(shopController.verifyRazorpayOrder));
 router.get('/:id', wrapAsync(shopController.getSpecificItem));
-router.post('/:id/add-to-cart', wrapAsync(shopController.addItemToCart));
-router.post('/:id/remove-from-cart', wrapAsync(shopController.removeItemFromCart));
-router.patch('/:id/increase-qty', wrapAsync(shopController.increaseItemQty));
-router.patch('/:id/decrease-qty', wrapAsync(shopController.decreaseItemQty));
-router.post('/place-order', wrapAsync(shopController.placeOrder));
+
+// Cart & orders — any logged-in user
+router.get('/user-cart', isLoggedIn, wrapAsync(shopController.getUserCart));
+router.delete('/empty-cart', isLoggedIn, wrapAsync(shopController.emptyUserCart));
+router.post('/:id/add-to-cart', isLoggedIn, wrapAsync(shopController.addItemToCart));
+router.post('/:id/remove-from-cart', isLoggedIn, wrapAsync(shopController.removeItemFromCart));
+router.patch('/:id/increase-qty', isLoggedIn, wrapAsync(shopController.increaseItemQty));
+router.patch('/:id/decrease-qty', isLoggedIn, wrapAsync(shopController.decreaseItemQty));
+
+// Payments — any logged-in user
+router.post('/create-rzp-order', isLoggedIn, wrapAsync(shopController.createRazorpayOrder));
+router.post('/verify-rzp-payment', isLoggedIn, wrapAsync(shopController.verifyRazorpayOrder));
+router.post('/place-order', isLoggedIn, wrapAsync(shopController.placeOrder));
 
 module.exports = router;

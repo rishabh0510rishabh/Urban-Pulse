@@ -1,36 +1,42 @@
 const express = require("express");
 const router = express.Router();
-const wasteSubmissionController = require("../controllers/wasteSubmission.controller");
 const wrapAsync = require("../utils/wrapAsync");
+const { isLoggedIn, requireRole } = require("../utils/middlewares");
 
-// READ ALL
-router.get("/", wrapAsync(wasteSubmissionController.getAllSubmissions));
+const wasteSubmissionController = require("../controllers/wasteSubmission.controller");
 
-// Vendor routes
-router.get('/vendor/near-me', wrapAsync(wasteSubmissionController.getNearbyVendorEvents));
-router.post('/vendor/events', wasteSubmissionController.createVendorEvent);
-router.get('/vendor/events/all', wrapAsync(wasteSubmissionController.getAllVendorEvents));
-router.post('/vendor/settlement', wrapAsync(wasteSubmissionController.createSettlement));
+// READ ALL — admin only
+router.get("/", isLoggedIn, requireRole("admin"), wrapAsync(wasteSubmissionController.getAllSubmissions));
 
-router.get("/assigned", wrapAsync(wasteSubmissionController.getVendorAssignments));
+// ── Vendor-only routes ──────────────────────────────────────────────────────
+router.get('/vendor/near-me', isLoggedIn, requireRole("vendor"), wrapAsync(wasteSubmissionController.getNearbyVendorEvents));
+router.post('/vendor/events', isLoggedIn, requireRole("vendor"), wasteSubmissionController.createVendorEvent);
+router.get('/vendor/events/all', isLoggedIn, requireRole("vendor"), wrapAsync(wasteSubmissionController.getAllVendorEvents));
+router.post('/vendor/settlement', isLoggedIn, requireRole("vendor"), wrapAsync(wasteSubmissionController.createSettlement));
 
+// Get waste assignments for logged-in vendor
+router.get("/assigned", isLoggedIn, requireRole("vendor"), wrapAsync(wasteSubmissionController.getVendorAssignments));
+
+// ── Admin/Official actions ──────────────────────────────────────────────────
 router.patch(
   "/requests/:id/verify",
+  isLoggedIn, requireRole("admin", "official"),
   wrapAsync(wasteSubmissionController.verifySubmission)
 );
 
 router.patch(
   "/requests/:id/pay",
+  isLoggedIn, requireRole("admin"),
   wrapAsync(wasteSubmissionController.payVendor)
 );
 
-router.patch("/requests/:id/collected", wrapAsync(wasteSubmissionController.markCollected));
+// ── Vendor marks collected ──────────────────────────────────────────────────
+router.patch("/requests/:id/collected", isLoggedIn, requireRole("vendor"), wrapAsync(wasteSubmissionController.markCollected));
 
+// READ ONE — admin, official, or vendor
+router.get("/:id", isLoggedIn, requireRole("admin", "official", "vendor"), wrapAsync(wasteSubmissionController.getSubmissionById));
 
-// READ ONE
-router.get("/:id", wrapAsync(wasteSubmissionController.getSubmissionById));
-
-// DELETE
-router.delete("/:id", wrapAsync(wasteSubmissionController.deleteSubmission));
+// DELETE — admin only
+router.delete("/:id", isLoggedIn, requireRole("admin"), wrapAsync(wasteSubmissionController.deleteSubmission));
 
 module.exports = router;

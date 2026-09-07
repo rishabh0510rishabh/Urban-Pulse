@@ -1,0 +1,36 @@
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+SESSION_SECRET=urbanpulse_super_secret_session_key_2026
+JWT_SECRET=urbanpulse_jwt_secret_key_2026
+
+# Database Connection (MongoDB Atlas)
+DB_URI=mongodb+srv://rishabhmishra0510_db_user:NMPWV1Ffakbiq63U@cluster0.aurfae6.mongodb.net/urbanpulse?retryWrites=true&w=majority
+CLOUD_DB_URI=mongodb+srv://rishabhmishra0510_db_user:NMPWV1Ffakbiq63U@cluster0.aurfae6.mongodb.net/urbanpulse?retryWrites=true&w=majority
+
+# CORS / Frontend Links
+DEV_LINK_REACT=http://localhost:3000
+PROD_LINK_REACT=http://localhost:3000
+
+# Cloudinary (Image Uploads - Optional/Configure when ready)
+CLOUD_NAME=t7rydjk7
+CLOUD_API_KEY=318283899369895
+CLOUD_API_SECRET=UqeJghX20A1CuKwkoCjttLZe2E4
+
+# Email / Nodemailer (OTP and Notifications - Optional)
+EMAIL_USER=originalgamer1008@gmail.com
+EMAIL_PASS=vxdzjitkrykkwvbc
+OTP_MAIL=originalgamer1008@gmail.com
+OTP_PASS=vxdzjitkrykkwvbc
+
+# Mapbox (Geocoding - Optional)
+MAPBOX_ACCESS_TOKEN=your_mapbox_access_token
+
+# Twilio (SMS Notifications - Optional)
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_PHONE_NUMBER=your_twilio_phone_number
+
+# Razorpay (Payments / Shop - Optional)
+RAZORPAY_KEY_ID=rzp_test_TXFKcUuFCKkcMY
+RAZORPAY_KEY_SECRET=JZ4tDyQRvkpXlGf0fdviUv3v

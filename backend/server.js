@@ -1,10 +1,22 @@
 const dns = require("dns");
+const path = require("path");
+const fs = require("fs");
+
 try {
   dns.setServers(["8.8.8.8", "1.1.1.1"]);
 } catch (e) {}
 
-if (process.env.NODE_ENV != "production") {
-  require("dotenv").config();
+// Load .env (with fallback to env if .env is not present)
+if (process.env.NODE_ENV !== "production") {
+  const envPath = path.join(__dirname, ".env");
+  const fallbackEnvPath = path.join(__dirname, "env");
+  if (fs.existsSync(envPath)) {
+    require("dotenv").config({ path: envPath });
+  } else if (fs.existsSync(fallbackEnvPath)) {
+    require("dotenv").config({ path: fallbackEnvPath });
+  } else {
+    require("dotenv").config();
+  }
 }
 
 const express = require("express");
@@ -35,18 +47,24 @@ const wasteSubmissionRouter = require('./routes/wasteSubmissionRouter.js');
 const User = require("./schemas/User.js");
 
 // -- ENV Requirements --
-const SESSION_SECRET = process.env.SESSION_SECRET || "your_session_secret_here";
+const SESSION_SECRET = process.env.SESSION_SECRET || "urbanpulse_super_secret_session_key_2026";
 
 // --- Server settings ---
 // Express setup
 const port = process.env.PORT || 5000;
 const app = express();
 
+app.set("trust proxy", 1);
+
 // MongoDB setup
 const dbURI =
   process.env.NODE_ENV === "production"
-    ? process.env.CLOUD_DB_URI
-    : process.env.DB_URI;
+    ? process.env.CLOUD_DB_URI || process.env.DB_URI
+    : process.env.DB_URI || process.env.CLOUD_DB_URI;
+
+if (!dbURI) {
+  console.error("⚠️ WARNING: DB_URI / CLOUD_DB_URI is not set in environment variables!");
+}
 
 const clientPromise = mongoose
   .connect(dbURI)
@@ -55,49 +73,65 @@ const clientPromise = mongoose
     return m.connection.getClient();
   })
   .catch((err) => {
-    console.log("Error connecting to MongoDB. Error: " + err.message);
+    console.error("Error connecting to MongoDB. Error: " + err.message);
+    throw err;
   });
 
 // Store code
 const store = MongoStore.create({
   clientPromise: clientPromise,
-  touchAfter: 24 * 3600, // Interval (in seconds) between session updates    (Update information after 23 hours)
+  touchAfter: 24 * 3600, // Interval (in seconds) between session updates
 });
 store.on("error", (err) => {
-  console.log("ERROR in MONGO SESSION STORE", err);
+  console.error("ERROR in MONGO SESSION STORE", err);
 });
 
 // Session Setup
-// Session Code
 const sessionOptions = {
   secret: SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
-  // Cookie options below
+  saveUninitialized: false,
   cookie: {
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Current time * No of days * no of hours in one day * no of minutes in an hour * no of seconds in a min * no of milliseconds in a second
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true, // For security purposes => Cross scripting attacks are prevented at this step
+    httpOnly: true,
   },
   store: store,
 };
 
-//Server setup
+// CORS setup
+const allowedOrigins = [
+  process.env.DEV_LINK_REACT,
+  process.env.PROD_LINK_REACT,
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.PROD_LINK_REACT
-        : process.env.DEV_LINK_REACT,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(session(sessionOptions));
 app.use(passport.initialize());
 app.use(passport.session());
-// Google strategy here
+
+// Google & Local strategy
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 passport.use(new LocalStrategy(User.authenticate()));
@@ -115,16 +149,38 @@ app.use('/recycle', recycleRouter);
 app.use('/official', officialRouter);
 app.use('/waste-submission', wasteSubmissionRouter);
 
-// x. Default Route
-app.get("/", async (req, res) => {
-  console.log(`Backend active!`);
+// Root Route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "success",
+    message: "Urban Pulse Backend is running successfully!",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// -- Error handling routes --
+// 404 Route Handler
 app.use((req, res, next) => {
-  next(new ExpressError(404, "API not found!"));
+  next(new ExpressError(404, `API route not found: ${req.method} ${req.originalUrl}`));
+});
+
+// Centralized Error Handling Middleware
+app.use((err, req, res, next) => {
+  const statusCode = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+
+  if (statusCode >= 500) {
+    console.error(`[Server Error ${statusCode}] ${req.method} ${req.originalUrl}:`, err);
+  }
+
+  res.status(statusCode).json({
+    success: false,
+    status: statusCode,
+    message: message,
+    ...(process.env.NODE_ENV !== "production" && { stack: err.stack }),
+  });
 });
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+

@@ -65,7 +65,12 @@ exports.createVendorEvent = async (req, res) => {
     }
 
     // 3️⃣ Get the franchisee of current owner
-    const franchisee = await Franchisee.findOne({ owner: req.user._id });
+    const ownerId = req.user?._id;
+    if (!ownerId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const franchisee = await Franchisee.findOne({ owner: ownerId });
 
     if (!franchisee) {
       return res.status(404).json({ message: "Franchisee profile not found" });
@@ -100,8 +105,13 @@ exports.createVendorEvent = async (req, res) => {
 
 exports.getAllVendorEvents = async (req, res) => {
   try {
+    const ownerId = req.user?._id;
+    if (!ownerId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     // 1. Find the franchisee owned by this logged-in user
-    const franchisee = await Franchisee.findOne({ owner: req.user._id });
+    const franchisee = await Franchisee.findOne({ owner: ownerId });
 
     if (!franchisee) {
       return res
@@ -124,6 +134,11 @@ exports.getAllVendorEvents = async (req, res) => {
 
 exports.createSettlement = async (req, res) => {
   try {
+    const ownerId = req.user?._id;
+    if (!ownerId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const { eventId, totalWeightKg, amountPaidToVendor, notes } = req.body;
 
     if (!eventId || !totalWeightKg || !amountPaidToVendor) {
@@ -139,7 +154,7 @@ exports.createSettlement = async (req, res) => {
     const vendorId = event.vendorId;
 
     // 2️⃣ Get franchisee of logged-in user
-    const franchisee = await Franchisee.findOne({ owner: req.user._id });
+    const franchisee = await Franchisee.findOne({ owner: ownerId });
     if (!franchisee) {
       return res.status(404).json({ message: "Franchisee not found" });
     }
@@ -156,14 +171,11 @@ exports.createSettlement = async (req, res) => {
       notes,
     });
 
-    // 4️⃣ Delete the vendor event now that settlement is done
-    await VendorEvent.findByIdAndDelete(eventId);
-
-    // OR — if you prefer marking it completed:
-    // await VendorEvent.findByIdAndUpdate(eventId, { status: 'completed' });
+    // 4️⃣ Mark the vendor event as completed to preserve relational history
+    await VendorEvent.findByIdAndUpdate(eventId, { status: "completed" });
 
     res.status(201).json({
-      message: "Settlement recorded & event closed",
+      message: "Settlement recorded & event marked completed",
       record,
     });
   } catch (err) {
