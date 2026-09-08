@@ -1,5 +1,6 @@
 import React from "react";
 import "./training.css";
+import "./components/level.css";
 
 import { LEVELS } from "./components/level"; // data array
 import { Link } from "react-router-dom"; // navigation for each level card
@@ -53,7 +54,7 @@ export default function Training() {
             </p>
 
             <Link to="/training/game" className="game-btn">
-              Play Now →
+              Play Game →
             </Link>
           </div>
           <div className="game-card coming-soon">

@@ -1,11 +1,13 @@
 export default function Cart({
-    cartItems,
+    cartItems = [],
     user,
     handleDecreaseQuantity,
     handleIncreaseQuantity,
     handleRemoveFromCart,
     setPageMode
   }) {
+    const safeCart = Array.isArray(cartItems) ? cartItems : [];
+
     return (
       <div className="cart-page">
         <button className="back-button" onClick={() => setPageMode("products")}>
@@ -14,11 +16,11 @@ export default function Cart({
   
         <h2 className="cart-title">Your Cart</h2>
   
-        {cartItems.length === 0 ? (
+        {safeCart.length === 0 ? (
           <p className="empty-cart">Your cart is empty</p>
         ) : (
           <div className="cart-list">
-            {cartItems.map((item, idx) => (
+            {safeCart.map((item, idx) => (
               <div key={idx} className="cart-item">
                 <img src={item.img} alt={item.name} className="cart-item-image" />
   
@@ -52,7 +54,7 @@ export default function Cart({
           </div>
         )}
   
-        {cartItems.length > 0 && (
+        {safeCart.length > 0 && (
           <button className="checkout-btn" onClick={() => setPageMode("checkout")}>
             Proceed to Checkout
           </button>

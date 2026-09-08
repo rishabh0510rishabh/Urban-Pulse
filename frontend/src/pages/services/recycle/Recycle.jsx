@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./Recycle.css";
 import api from "../../../utils/axiosConfig";
+import { useAuth } from "../../../components/AuthContext";
 
 function Recycle() {
+  const { user } = useAuth();
   const [wasteTypes, setWasteTypes] = useState([]);
   const [franchisees, setFranchisees] = useState([]);
   const [selectedWasteType, setSelectedWasteType] = useState(null);
@@ -24,30 +26,52 @@ function Recycle() {
     const fetchData = async () => {
       try {
         const typesRes = await api.get("/recycle/types");
-        setWasteTypes(typesRes.data);
-
-        navigator.geolocation.getCurrentPosition(async (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-
-          const franRes = await api.get(
-            `/recycle/franchisees/near-me?lat=${lat}&lng=${lng}&radiusKm=25`
-          );
-
-          setFranchisees(franRes.data.franchisees);
-          // Fetch nearby vendor events (within 2 km)
-          const eventsRes = await api.get(
-            `/waste-submission/vendor/near-me?lat=${lat}&lng=${lng}&radiusKm=2`
-          );
-          setVendorEvents(eventsRes.data.events || []);
-        });
+        setWasteTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
       } catch (err) {
-        console.error("Failed to fetch recycle data", err);
+        console.error("Failed to fetch recycle types", err);
+      }
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+
+            try {
+              const franRes = await api.get(
+                `/recycle/franchisees/near-me?lat=${lat}&lng=${lng}&radiusKm=25`
+              );
+              setFranchisees(franRes.data?.franchisees || []);
+            } catch (err) {
+              console.error("Failed to fetch franchisees near user:", err);
+            }
+
+            // Vendor collection events endpoint requires vendor role.
+            // Only query if the logged in user has vendor privileges.
+            if (user && user.role === "vendor") {
+              try {
+                const eventsRes = await api.get(
+                  `/waste-submission/vendor/near-me?lat=${lat}&lng=${lng}&radiusKm=2`
+                );
+                setVendorEvents(eventsRes.data?.events || []);
+              } catch (err) {
+                // Gracefully handle 403 or other errors without crashing the page
+                console.warn("Vendor collection events unavailable:", err?.response?.status || err.message);
+                setVendorEvents([]);
+              }
+            } else {
+              setVendorEvents([]);
+            }
+          },
+          (geoErr) => {
+            console.warn("Geolocation unavailable or permission denied:", geoErr.message);
+          }
+        );
       }
     };
 
     fetchData();
-  }, []);
+  }, [user]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -192,54 +216,67 @@ function Recycle() {
       {/* Vendor Events Near You */}
       <section className="vendor-events-section">
         <h2 className="section-title">Vendor Collection Events Near You</h2>
-        <p className="section-subtitle">
-          {vendorEvents.length > 0
-            ? `${vendorEvents.length} collection events within 2 km radius`
-            : "No collection events happening near you right now."}
-        </p>
+        {user?.role === "vendor" ? (
+          <>
+            <p className="section-subtitle">
+              {vendorEvents.length > 0
+                ? `${vendorEvents.length} collection events within 2 km radius`
+                : "No collection events happening near you right now."}
+            </p>
 
-        {vendorEvents.length > 0 ? (
-          <div className="vendor-events-grid">
-            {vendorEvents.map((ev) => (
-              <div key={ev._id} className="vendor-event-card">
-                <h3 className="vendor-event-title">{ev.title}</h3>
+            {vendorEvents.length > 0 ? (
+              <div className="vendor-events-grid">
+                {vendorEvents.map((ev) => (
+                  <div key={ev._id} className="vendor-event-card">
+                    <h3 className="vendor-event-title">{ev.title}</h3>
 
-                <div className="vendor-event-details">
-                  <div className="detail-row">
-                    <span className="detail-icon">📍</span>
-                    <span>
-                      {" "}
-                      <a
-                        href={`https://www.google.com/maps?q=${ev.location.coordinates[1]},${ev.location.coordinates[0]}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                      {ev.location.address || "Nearby Area"}
-                      </a>
-                    </span>
+                    <div className="vendor-event-details">
+                      <div className="detail-row">
+                        <span className="detail-icon">📍</span>
+                        <span>
+                          {" "}
+                          <a
+                            href={`https://www.google.com/maps?q=${ev.location.coordinates[1]},${ev.location.coordinates[0]}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {ev.location.address || "Nearby Area"}
+                          </a>
+                        </span>
+                      </div>
+
+                      <div className="detail-row">
+                        <span className="detail-icon">🗓️</span>
+                        <span>{new Date(ev.date).toLocaleString()}</span>
+                      </div>
+
+                      <div className="detail-row">
+                        <span className="detail-icon">♻️</span>
+                        <span>Collecting: {ev.wasteTypes.join(", ")}</span>
+                      </div>
+
+                      <div className="detail-row">
+                        <span className="detail-icon">🚛</span>
+                        <span>Vendor: {ev.vendorName}</span>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="detail-row">
-                    <span className="detail-icon">🗓️</span>
-                    <span>{new Date(ev.date).toLocaleString()}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-icon">♻️</span>
-                    <span>Collecting: {ev.wasteTypes.join(", ")}</span>
-                  </div>
-
-                  <div className="detail-row">
-                    <span className="detail-icon">🚛</span>
-                    <span>Vendor: {ev.vendorName}</span>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="empty-state">
+                <p>❌ No vendor collection events nearby.</p>
+              </div>
+            )}
+          </>
         ) : (
-          <div className="empty-state">
-            <p>❌ No vendor collection events nearby.</p>
+          <div className="empty-state" style={{ maxWidth: "620px", margin: "1.5rem auto", textAlign: "center", padding: "1.75rem", background: "var(--color-surface, #ffffff)", borderRadius: "var(--radius-md, 12px)", border: "1px solid var(--color-border, #e2e8f0)" }}>
+            <p style={{ fontSize: "1rem", fontWeight: "600", color: "var(--color-text-secondary, #334155)", marginBottom: "0.4rem" }}>
+              🚚 Direct Vendor Collection Drives
+            </p>
+            <p style={{ fontSize: "0.9rem", color: "var(--color-text-muted, #64748b)", lineHeight: "1.5" }}>
+              Mobile collection drives are accessible to verified partner vendors. Citizens can drop off recyclable materials directly at any certified collection center listed below.
+            </p>
           </div>
         )}
       </section>

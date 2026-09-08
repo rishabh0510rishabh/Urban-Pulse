@@ -1,4 +1,6 @@
-export default function Checkout({ cartItems, setPageMode, handleCheckout }) {
+export default function Checkout({ cartItems = [], setPageMode, handleCheckout }) {
+  const safeCart = Array.isArray(cartItems) ? cartItems : [];
+
   return (
     <div className="checkout-page">
       <button className="back-button" onClick={() => setPageMode("cart")}>
@@ -7,12 +9,12 @@ export default function Checkout({ cartItems, setPageMode, handleCheckout }) {
 
       <h2>Checkout</h2>
 
-      {cartItems.length === 0 ? (
+      {safeCart.length === 0 ? (
         <div className="empty-cart-message">Your cart is empty.</div>
       ) : (
         <>
           <ul className="checkout-list">
-            {cartItems.map((item, index) => (
+            {safeCart.map((item, index) => (
               <li key={index} className="checkout-item">
                 <div className="checkout-item-left">
                   <img
@@ -36,7 +38,7 @@ export default function Checkout({ cartItems, setPageMode, handleCheckout }) {
           <div className="checkout-summary">
             <div className="checkout-total">
               Total: ₹{" "}
-              {cartItems
+              {safeCart
                 .reduce((sum, item) => sum + item.price * item.quantity, 0)
                 .toLocaleString("en-IN")}
             </div>

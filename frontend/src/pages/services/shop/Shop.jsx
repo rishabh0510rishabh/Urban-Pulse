@@ -23,13 +23,26 @@ function Shop() {
 
   useEffect(() => {
     const getUserAndCart = async () => {
-      const userCart = await api.get("/shop/user-cart");
-      setCartItems(userCart.data);
+      if (!user) {
+        setCartItems([]);
+        return;
+      }
+      try {
+        const userCart = await api.get("/shop/user-cart");
+        setCartItems(Array.isArray(userCart.data) ? userCart.data : []);
+      } catch (err) {
+        console.error("Failed to fetch user cart:", err);
+        setCartItems([]);
+      }
     };
     getUserAndCart();
-  }, []);
+  }, [user]);
 
   const handleAddToCart = async (id) => {
+    if (!user) {
+      alert("Please log in to add items to your cart.");
+      return;
+    }
     try {
       const product = items.find((i) => i.id === id);
       if (!product) return;
@@ -46,47 +59,57 @@ function Shop() {
           quantity: 1,
         },
       });
-      console.log(res.data.cart);
-      setCartItems(res.data.cart);
+      if (res.data && Array.isArray(res.data.cart)) {
+        setCartItems(res.data.cart);
+      }
     } catch (err) {
       console.error("Add to cart error:", err);
     }
   };
 
   const handleIncreaseQuantity = async (id) => {
+    if (!user) return;
     try {
       const res = await api.patch(`/shop/${id}/increase-qty`, {
         userId: user._id,
         itemId: id,
       });
 
-      setCartItems(res.data.cart);
+      if (res.data && Array.isArray(res.data.cart)) {
+        setCartItems(res.data.cart);
+      }
     } catch (err) {
       console.error("Increase qty error:", err);
     }
   };
 
   const handleDecreaseQuantity = async (id) => {
+    if (!user) return;
     try {
       const res = await api.patch(`/shop/${id}/decrease-qty`, {
         userId: user._id,
         itemId: id,
       });
 
-      setCartItems(res.data.cart);
+      if (res.data && Array.isArray(res.data.cart)) {
+        setCartItems(res.data.cart);
+      }
     } catch (err) {
       console.error("Decrease qty error:", err);
     }
   };
 
   const handleRemoveFromCart = async (id) => {
+    if (!user) return;
     try {
       const res = await api.post(`/shop/${id}/remove-from-cart`, {
         userId: user._id,
         itemId: id,
       });
 
-      setCartItems(res.data.cart);
+      if (res.data && Array.isArray(res.data.cart)) {
+        setCartItems(res.data.cart);
+      }
     } catch (err) {
       console.error("Remove from cart error:", err);
     }
@@ -160,6 +183,8 @@ function Shop() {
     return matchesSearch && matchesCategory;
   });
 
+  const safeCartItems = Array.isArray(cartItems) ? cartItems : [];
+
   return (
     <div className="shop-page">
       {/* 🔍 Search + Filters + Cart Button */}
@@ -171,14 +196,14 @@ function Shop() {
         setPageMode={setPageMode}
         showMobileFilters={showMobileFilters}
         setShowMobileFilters={setShowMobileFilters}
-        cartCount={cartItems.length || 0}
+        cartCount={safeCartItems.length}
       />
 
       {/* 🛒 Products Page */}
       {pageMode === "products" && (
         <Products
           filteredItems={filteredItems}
-          cartItems={cartItems}
+          cartItems={safeCartItems}
           handleAddToCart={handleAddToCart}
           setSelectedProduct={setSelectedProduct}
           setPageMode={setPageMode}
@@ -189,7 +214,7 @@ function Shop() {
       {pageMode === "details" && selectedProduct && (
         <ProductDetail
           selectedProduct={selectedProduct}
-          cartItems={cartItems}
+          cartItems={safeCartItems}
           setPageMode={setPageMode}
           handleAddToCart={handleAddToCart}
         />
@@ -199,7 +224,7 @@ function Shop() {
       {pageMode === "cart" && (
         <Cart
           user={user}
-          cartItems={cartItems}
+          cartItems={safeCartItems}
           handleIncreaseQuantity={handleIncreaseQuantity}
           handleDecreaseQuantity={handleDecreaseQuantity}
           handleRemoveFromCart={handleRemoveFromCart}
@@ -209,7 +234,7 @@ function Shop() {
 
       {/* 💳 Checkout */}
       {pageMode === "checkout" && (
-        <Checkout cartItems={cartItems} setPageMode={setPageMode} handleCheckout={handleCheckout}/>
+        <Checkout cartItems={safeCartItems} setPageMode={setPageMode} handleCheckout={handleCheckout}/>
       )}
 
       {/* FOOTER stays same */}
