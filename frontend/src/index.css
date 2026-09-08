@@ -1,27 +1,285 @@
-/* Reset & Base Styles */
-* {
+/* ==========================================================================
+   Urban Pulse - Core Design System & Global Styles
+   Light Theme Civic-Tech & Sustainability Identity
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+/* --- Reset & Base Box-Sizing --- */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 :root {
-  --font-heading: 'Poppins', sans-serif;
-  --font-body: 'Lato', sans-serif;
-  --color-background: #f8f9fa;
-  --color-text: #34495e;
-  --color-primary-green: #0a6847;
-  --color-accent-green: #77b0aa;
-  --color-highlight-bg: #f0fdf4;
+  /* --- Typography --- */
+  --font-heading: 'Plus Jakarta Sans', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* --- Sustainability Color Palette (Light Theme Only) --- */
+  --color-primary: #0a6847;             /* Deep Sustainable Forest Green */
+  --color-primary-dark: #064e3b;        /* Dark Evergreen for High Contrast */
+  --color-primary-hover: #08553a;       /* Focused Green Hover */
+  --color-primary-light: #10b981;       /* Vibrant Emerald */
+  --color-primary-subtle: #ecfdf5;      /* Ultra-light Mint Background */
+
+  --color-accent: #0d9488;              /* Clean Civic Teal */
+  --color-accent-light: #f0fdfa;        /* Soft Teal Tint */
+  --color-accent-border: #99f6e4;       /* Crisp Accent Border */
+
+  /* --- Surface & Background Neutrals --- */
+  --color-bg-base: #f8fafc;             /* Modern Off-white / Cool Slate 50 */
+  --color-bg-subtle: #f1f5f9;           /* Slate 100 Section Alternates */
+  --color-surface: #ffffff;             /* Crisp Pure White Surface */
+  --color-surface-hover: #fbfdfc;       /* Gentle Hover Tint */
+
+  /* --- Borders & Dividers --- */
+  --color-border: #e2e8f0;              /* Slate 200 Subdued Border */
+  --color-border-subtle: #f1f5f9;       /* Slate 100 Ultra-light Divider */
+  --color-border-strong: #cbd5e1;       /* Slate 300 Interactive Border */
+  --color-border-focus: #10b981;        /* Focus Ring Green */
+
+  /* --- Typography Colors --- */
+  --color-text-primary: #0f172a;        /* Slate 900 Deep Charcoal (No Pure Black) */
+  --color-text-secondary: #334155;      /* Slate 700 Readable Body */
+  --color-text-muted: #64748b;          /* Slate 500 Supporting Captions */
+  --color-text-inverse: #ffffff;        /* Pure White for Green Badges & Buttons */
+
+  /* --- Civic Status Colors --- */
+  --color-status-pending: #f59e0b;      /* Amber / Pending Action */
+  --color-status-pending-bg: #fffbeb;
+  --color-status-allotted: #3b82f6;     /* Blue / Dispatched to Team */
+  --color-status-allotted-bg: #eff6ff;
+  --color-status-resolved: #10b981;     /* Green / Cleaned & Verified */
+  --color-status-resolved-bg: #ecfdf5;
+  --color-status-event: #8b5cf6;        /* Violet / Community Event */
+  --color-status-event-bg: #f5f3ff;
+  --color-status-franchisee: #0284c7;   /* Cyan-Blue / Recycling Hub */
+  --color-status-franchisee-bg: #f0f9ff;
+
+  /* --- Elevation & Shadows --- */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 4px 0 rgba(15, 23, 42, 0.06), 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 6px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 12px 30px -4px rgba(15, 23, 42, 0.1), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+  --shadow-xl: 0 20px 40px -8px rgba(15, 23, 42, 0.12), 0 8px 16px -4px rgba(15, 23, 42, 0.06);
+  --shadow-glow: 0 0 24px -4px rgba(16, 185, 129, 0.35);
+
+  /* --- Border Radii --- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* --- Transitions --- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Layout Bounds --- */
+  --container-max: 1280px;
+  --container-wide: 1400px;
+  --header-height: 72px;
+
+  /* --- Legacy Aliases for Backwards Compatibility with other pages --- */
   --color-white: #ffffff;
-  --color-border: #e0e0e0;
-  --border-radius: 12px;
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.1);
-  --transition-smooth: all 0.3s ease-in-out;
-  --color-text-dark: #333;
-  --color-text-light: #ffffff;
-  --color-background-light: #f7fafc;
-  --color-border-light: #e2e8f0;
-  --color-shadow: rgba(0, 0, 0, 0.05);
+  --color-background: var(--color-bg-base);
+  --color-text: var(--color-text-secondary);
+  --color-primary-green: var(--color-primary);
+  --color-accent-green: var(--color-primary-light);
+  --color-highlight-bg: var(--color-primary-subtle);
+  --color-text-dark: var(--color-text-primary);
+  --color-text-light: var(--color-text-inverse);
+  --color-background-light: var(--color-bg-subtle);
+  --color-border-light: var(--color-border);
+  --color-shadow: rgba(15, 23, 42, 0.06);
+  --border-radius: var(--radius-md);
+}
+
+/* --- Document Root Rules --- */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text-secondary);
+  background-color: var(--color-bg-base);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* --- Typography Hierarchy --- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+/* --- Accessibility Focus States --- */
+:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+/* --- Accessible Reduced Motion Support --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Standard Layout Container --- */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* --- Reusable Button Utilities --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn--primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn--primary:hover {
+  background-color: var(--color-primary-hover);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn--primary:active {
+  transform: translateY(0);
+}
+
+.btn--secondary {
+  background-color: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-xs);
+}
+
+.btn--secondary:hover {
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+.btn--outline {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.btn--outline:hover {
+  background-color: var(--color-bg-subtle);
+  border-color: var(--color-border-strong);
+}
+
+.btn--lg {
+  padding: 0.9rem 1.85rem;
+  font-size: 1.05rem;
+  border-radius: var(--radius-md);
+}
+
+.btn--sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-xs);
+}
+
+/* --- Pill & Badge Utilities --- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: var(--radius-full);
+  line-height: 1;
+}
+
+.badge--primary {
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary);
+  border: 1px solid var(--color-accent-border);
+}
+
+.badge--neutral {
+  background-color: var(--color-bg-subtle);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
 }

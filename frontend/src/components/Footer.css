@@ -1,104 +1,220 @@
+/* ==========================================================================
+   Urban Pulse - Footer Stylesheet
+   Modern SaaS Light Theme Footer
+   ========================================================================== */
+
 .footer {
-  background-color: var(--color-background-light);
-  padding-top: 4rem;
+  background-color: #ffffff;
   border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
   font-family: var(--font-body);
-  font-size: 0.95rem;
-  color: var(--color-text);
+  margin-top: auto;
 }
 
 .footer__container {
-  width: 90%;
-  max-width: 1200px;
+  max-width: var(--container-wide);
   margin: 0 auto;
-  padding-bottom: 3rem;
+  padding: 4.5rem 1.5rem 3rem 1.5rem;
   display: grid;
-  gap: 2.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 2fr 1fr 1fr 1.5fr;
+  gap: 3rem;
 }
 
-.footer__col-title {
-  font-family: var(--font-heading);
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--color-primary-green);
-  margin-bottom: 1.5rem;
-}
-
-.footer__brand-tagline {
-  line-height: 1.7;
-  margin-bottom: 1.5rem;
-  color: var(--color-text);
-}
-
-.footer__nav-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.footer__nav-item {
-  margin-bottom: 0.75rem;
-}
-
-.footer__nav-link {
-  color: var(--color-text);
-  text-decoration: none;
-  transition: var(--transition-smooth);
-}
-
-.footer__nav-link:hover {
-  color: var(--color-accent-green);
-  padding-left: 5px;
-}
-
-.footer__social-list {
+/* --- Brand Column --- */
+.footer__col--brand {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.footer__brand-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.brand__badge--footer {
+  width: 36px;
+  height: 36px;
+  background-color: var(--color-primary-subtle);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+}
+
+.footer__brand-name {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  letter-spacing: -0.01em;
+}
+
+.footer__brand-desc {
+  font-size: 0.925rem;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+  max-width: 340px;
+  margin-bottom: 1.25rem;
+}
+
+.footer__badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  background-color: var(--color-primary-subtle);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  margin-bottom: 1.5rem;
+}
+
+.footer__socials {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.footer__social-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.footer__social-btn:hover {
+  background-color: var(--color-primary-subtle);
+  color: var(--color-primary);
+  border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+}
+
+/* --- Column Titles & Lists --- */
+.footer__title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+}
+
+.footer__links {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.footer__social-link {
-  color: var(--color-text);
-  font-size: 1.5rem;
+.footer__link {
+  font-size: 0.925rem;
+  color: var(--color-text-muted);
   text-decoration: none;
-  transition: var(--transition-smooth);
+  transition: all var(--transition-fast);
+  display: inline-block;
 }
 
-.footer__social-link:hover {
-  color: var(--color-accent-green);
-  transform: scale(1.1);
+.footer__link:hover {
+  color: var(--color-primary);
+  transform: translateX(3px);
 }
 
-.footer__bottom-bar {
-  background-color: var(--color-primary-green);
-  color: var(--color-text-light);
-  padding: 1.25rem 0;
-  text-align: center;
+/* --- Tech Column --- */
+.footer__tech-desc {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text-muted);
+  margin-bottom: 1.25rem;
 }
 
-.bottom-bar__container {
-  width: 90%;
-  max-width: 1200px;
+.footer__github-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.footer__github-badge:hover {
+  background-color: var(--color-primary-subtle);
+  border-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+/* --- Bottom Copyright Bar --- */
+.footer__bottom {
+  border-top: 1px solid var(--color-border);
+  background-color: var(--color-bg-base);
+  padding: 1.5rem 1.5rem;
+}
+
+.footer__bottom-container {
+  max-width: var(--container-wide);
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
-.bottom-bar__copyright,
-.bottom-bar__credit {
+.footer__copyright,
+.footer__credits {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
   margin: 0;
-  font-size: 0.9rem;
 }
 
-@media (max-width: 768px) {
-  .bottom-bar__container {
+/* --- Responsive Breakpoints --- */
+@media (max-width: 1024px) {
+  .footer__container {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+  }
+
+  .footer__col--brand {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer__container {
+    grid-template-columns: 1fr;
+    padding: 3rem 1rem 2rem 1rem;
+    gap: 2rem;
+  }
+
+  .footer__col--brand {
+    grid-column: span 1;
+  }
+
+  .footer__bottom-container {
     flex-direction: column;
-    justify-content: center;
+    text-align: center;
+    gap: 0.5rem;
   }
 }
