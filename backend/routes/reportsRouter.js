@@ -11,8 +11,8 @@ const { isLoggedIn, requireRole } = require("../utils/middlewares");
 const reportsController = require("../controllers/reports.controller");
 
 // -- /reports --
-// Get all reports — admin & official only
-router.get("/", isLoggedIn, requireRole("admin", "official"), wrapAsync(reportsController.getAllReports));
+// Get all reports — public for live map and dashboards
+router.get("/", wrapAsync(reportsController.getAllReports));
 
 // Create a new report (any logged-in user)
 router.post(
