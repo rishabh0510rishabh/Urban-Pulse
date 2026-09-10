@@ -344,6 +344,10 @@ export default function Home() {
                 <span>Road Hazard</span>
               </span>
               <span className="legend-item">
+                <span className="legend-marker legend-marker--drainage" />
+                <span>Drainage / Sewage</span>
+              </span>
+              <span className="legend-item">
                 <span className="legend-marker legend-marker--allotted" />
                 <span>Crew Dispatched</span>
               </span>
@@ -399,6 +403,8 @@ export default function Home() {
                       ? "⚠️ Blind Turn"
                       : r.reportType === "road_hazard"
                       ? "🚧 Road Hazard"
+                      : r.reportType === "drainage"
+                      ? "🌊 Drainage Issue"
                       : "🗑️ Garbage Report";
 
                   return (

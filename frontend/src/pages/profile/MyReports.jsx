@@ -75,6 +75,8 @@ function MyReports() {
                                             ? '⚠️ Blind Turn'
                                             : report.reportType === 'road_hazard'
                                             ? '🚧 Hazard'
+                                            : report.reportType === 'drainage'
+                                            ? '🌊 Drainage'
                                             : '🗑️ Garbage'}
                                     </span>
                                     <span className={`aspirely-report-status ${getStatusClass(report.status)}`}>

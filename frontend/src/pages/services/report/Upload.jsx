@@ -34,6 +34,13 @@ const CATEGORIES = [
     icon: "🚧",
     badgeClass: "category-card--road_hazard",
   },
+  {
+    id: "drainage",
+    title: "Drainage & Sewage Overflow",
+    desc: "Blocked drains, open gutters, sewage leaks, or stagnant foul water",
+    icon: "🌊",
+    badgeClass: "category-card--drainage",
+  },
 ];
 
 export default function Upload() {
@@ -171,6 +178,8 @@ export default function Upload() {
             ? "Blind Turn Hazard"
             : reportType === "road_hazard"
             ? "Road Hazard"
+            : reportType === "drainage"
+            ? "Drainage Issue"
             : "Garbage";
         alert(`${typeName} report submitted successfully! You earned +15 GreenCoins.`);
         navigate("/");
@@ -321,6 +330,12 @@ export default function Upload() {
                     <li>🚧 <strong>Road Hazard:</strong> Frame open manholes, fallen poles, or flooding clearly.</li>
                   </>
                 )}
+                {reportType === "drainage" && (
+                  <>
+                    <li>🌊 <strong>Drainage:</strong> Capture blocked storm drains, overflowing manholes, or stagnated contaminated water.</li>
+                    <li>⚠️ Avoid stepping into wet or slippery sludge while taking pictures.</li>
+                  </>
+                )}
                 {reportType === "garbage" && (
                   <>
                     <li>🗑️ <strong>Garbage:</strong> Ensure waste overflow or litter pile is visible in frame.</li>
@@ -439,6 +454,8 @@ export default function Upload() {
                   ? "blind turn hazard details"
                   : reportType === "road_hazard"
                   ? "road hazard details"
+                  : reportType === "drainage"
+                  ? "drainage blockage or sewage overflow details"
                   : "waste issue"
               }...`}
               value={remarks}

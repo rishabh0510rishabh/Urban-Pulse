@@ -12,7 +12,7 @@ const reportSchema = new mongoose.Schema(
     },
     reportType: {
       type: String,
-      enum: ["garbage", "pothole", "blind_turn", "road_hazard"],
+      enum: ["garbage", "pothole", "blind_turn", "road_hazard", "drainage"],
       default: "garbage",
     },
     severity: {

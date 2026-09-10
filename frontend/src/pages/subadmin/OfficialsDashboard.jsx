@@ -344,6 +344,7 @@ export default function OfficialsDashboard() {
                   <option value="pothole">🕳️ Potholes</option>
                   <option value="blind_turn">⚠️ Blind Turns</option>
                   <option value="road_hazard">🚧 Road Hazards</option>
+                  <option value="drainage">🌊 Drainage & Sewage</option>
                 </select>
               </div>
             </div>
@@ -381,6 +382,8 @@ export default function OfficialsDashboard() {
                               ? '#fef9c3'
                               : r.reportType === 'road_hazard'
                               ? '#fee2e2'
+                              : r.reportType === 'drainage'
+                              ? '#e0f2fe'
                               : '#d1fae5',
                           color:
                             r.reportType === 'pothole'
@@ -389,6 +392,8 @@ export default function OfficialsDashboard() {
                               ? '#854d0e'
                               : r.reportType === 'road_hazard'
                               ? '#b91c1c'
+                              : r.reportType === 'drainage'
+                              ? '#0369a1'
                               : '#047857',
                         }}>
                           {r.reportType === 'pothole'
@@ -397,6 +402,8 @@ export default function OfficialsDashboard() {
                             ? '⚠️ Blind Turn'
                             : r.reportType === 'road_hazard'
                             ? '🚧 Hazard'
+                            : r.reportType === 'drainage'
+                            ? '🌊 Drainage'
                             : '🗑️ Garbage'}
                         </span>
                       </td>

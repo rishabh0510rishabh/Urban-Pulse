@@ -610,7 +610,15 @@
 
 .legend-marker--pothole { background-color: #ea580c; }
 .legend-marker--blind_turn { background-color: #eab308; }
-.legend-marker--road_hazard { background-color: #ef4444; }
+.marker-pin--road_hazard,
+.legend-marker--road_hazard {
+  background-color: #ef4444;
+}
+
+.marker-pin--drainage,
+.legend-marker--drainage {
+  background-color: #0284c7;
+}
 
 /* Popup Overrides */
 .pulse-popup .leaflet-popup-content-wrapper {

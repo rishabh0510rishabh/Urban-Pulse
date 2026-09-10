@@ -44,6 +44,8 @@ exports.createReport = async (req, res) => {
         ? "blind turn hazard"
         : reportType === "road_hazard"
         ? "road hazard"
+        : reportType === "drainage"
+        ? "drainage issue"
         : "garbage";
     return res.status(409).json({
       message: `A ${typeLabel} report near your location is already under process. Our response team is on it. Thank you for keeping our city safe and clean!`,

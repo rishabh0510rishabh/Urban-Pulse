@@ -159,8 +159,15 @@
 }
 
 .aspirely-category-road_hazard {
-    background-color: #fee2e2;
+    background: #fee2e2;
     color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.aspirely-category-drainage {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
 }
 
 .aspirely-category-garbage {

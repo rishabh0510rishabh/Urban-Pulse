@@ -108,6 +108,8 @@ export default function OfficialsReportDisplay() {
                       ? "⚠️ Blind Turn Hazard"
                       : reportType === "road_hazard"
                       ? "🚧 Road Obstruction"
+                      : reportType === "drainage"
+                      ? "🌊 Drainage / Sewage Overflow"
                       : "🗑️ Garbage / Waste"}
                   </strong>
                 </dd>
