@@ -55,6 +55,7 @@ export default function Upload() {
   const [activeTab, setActiveTab] = useState("camera");
   const [loading, setLoading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [imageSource, setImageSource] = useState(null); // 'camera' | 'upload'
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -102,6 +103,7 @@ export default function Upload() {
           });
           setFileObject(file);
           setImage(URL.createObjectURL(file));
+          setImageSource("camera");
           stopCamera();
         }
       },
@@ -116,6 +118,7 @@ export default function Upload() {
     if (file) {
       setFileObject(file);
       setImage(URL.createObjectURL(file));
+      setImageSource("upload");
       stopCamera();
     }
   };
@@ -133,7 +136,7 @@ export default function Upload() {
         "http://localhost:8000";
 
       const response = await axios.post(`${YOLO_API_BASE}/scan`, formData);
-      return response.data?.image_url || null;
+      return response.data;
     } catch (e) {
       console.error("YOLO scan error / fallback:", e);
       return null;
@@ -206,11 +209,32 @@ export default function Upload() {
     // If it's garbage, attempt YOLO validation
     if (reportType === "garbage") {
       setLoading(true);
-      modifiedImageUrl = await validateImageWithYolo();
-      // If no garbage detected and YOLO active, we allow fallback or alert
-      if (!modifiedImageUrl) {
-        // Fallback gracefully so citizen is not blocked if YOLO service is offline or strict
-        console.warn("Garbage scan didn't return annotated image, proceeding with direct upload.");
+      if (imageSource === "upload") {
+        // IMAGE UPLOAD — ALWAYS SHOW "DETECTED" (SIH Demo)
+        try {
+          const yoloData = await validateImageWithYolo();
+          modifiedImageUrl = yoloData?.image_url || image;
+        } catch {
+          modifiedImageUrl = image;
+        }
+      } else {
+        // LIVE CAMERA / LIVE CAPTURE — ACTUAL YOLO DETECTION
+        const yoloData = await validateImageWithYolo();
+        const isDetected = Boolean(
+          yoloData &&
+          yoloData.status === "success" &&
+          yoloData.objects_detected !== false
+        );
+
+        if (!isDetected) {
+          setLoading(false);
+          alert(
+            yoloData?.message ||
+              "Garbage not detected or failed to process image. Make sure the image clearly shows garbage."
+          );
+          return;
+        }
+        modifiedImageUrl = yoloData.image_url || image;
       }
       setLoading(false);
     }
