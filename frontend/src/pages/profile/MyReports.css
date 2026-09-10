@@ -137,6 +137,37 @@
     color: #555;
 }
 
+/* Category Badges */
+.aspirely-category-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.aspirely-category-pothole {
+    background-color: #ffedd5;
+    color: #c2410c;
+}
+
+.aspirely-category-blind_turn {
+    background-color: #fef9c3;
+    color: #854d0e;
+}
+
+.aspirely-category-road_hazard {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.aspirely-category-garbage {
+    background-color: #d1fae5;
+    color: #047857;
+}
+
 
 /* --- Re-usable Buttons --- */
 /* (You can move these to a global button.css if you make one) */

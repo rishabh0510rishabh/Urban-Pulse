@@ -1,20 +1,56 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import api from "../../../utils/axiosConfig";
+import { ShieldAlert } from "lucide-react";
 import "./Upload.css";
+
+const CATEGORIES = [
+  {
+    id: "garbage",
+    title: "Garbage & Waste Dump",
+    desc: "Uncollected trash, illegal dumping, or bin overflow",
+    icon: "🗑️",
+    badgeClass: "category-card--garbage",
+  },
+  {
+    id: "pothole",
+    title: "Pothole & Road Crater",
+    desc: "Deep holes, asphalt breakage, or damaged road surface",
+    icon: "🕳️",
+    badgeClass: "category-card--pothole",
+  },
+  {
+    id: "blind_turn",
+    title: "Blind Turn & Dangerous Curve",
+    desc: "Obstructed view, lack of convex mirrors, accident hotspot",
+    icon: "⚠️",
+    badgeClass: "category-card--blind_turn",
+  },
+  {
+    id: "road_hazard",
+    title: "Road Hazard & Obstruction",
+    desc: "Fallen tree, open manhole, waterlogging, or debris",
+    icon: "🚧",
+    badgeClass: "category-card--road_hazard",
+  },
+];
 
 export default function Upload() {
   const navigate = useNavigate();
+  const [reportType, setReportType] = useState("garbage");
+  const [severity, setSeverity] = useState("medium");
+  const [landmark, setLandmark] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [image, setImage] = useState(null); // URL for preview
   const [fileObject, setFileObject] = useState(null); // Actual File object
   const [stream, setStream] = useState(null);
-  const [remarks, setRemarks] = useState("");
-  const [activeTab, setActiveTab] = useState("camera"); // State for tabs
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
+  const [activeTab, setActiveTab] = useState("camera");
   const [loading, setLoading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
   // --- Camera Logic ---
   const startCamera = async () => {
@@ -50,15 +86,21 @@ export default function Upload() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    canvas.toBlob((blob) => {
-      if (blob) {
-        const file = new File([blob], "camera-capture.jpg", { type: "image/jpeg" });
-        setFileObject(file);
-        setImage(URL.createObjectURL(file));
-        stopCamera(); // Stop camera after capture for better UX
-      }
-    }, "image/jpeg", 0.9);
+
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          const file = new File([blob], `${reportType}-capture.jpg`, {
+            type: "image/jpeg",
+          });
+          setFileObject(file);
+          setImage(URL.createObjectURL(file));
+          stopCamera();
+        }
+      },
+      "image/jpeg",
+      0.9
+    );
   };
 
   // --- File Upload Logic ---
@@ -67,7 +109,7 @@ export default function Upload() {
     if (file) {
       setFileObject(file);
       setImage(URL.createObjectURL(file));
-      stopCamera(); // Ensure camera is off if user uploads
+      stopCamera();
     }
   };
 
@@ -82,10 +124,11 @@ export default function Upload() {
           ? process.env.REACT_APP_API_URL_YOLO_PROD
           : process.env.REACT_APP_API_URL_YOLO_LOCAL) ||
         "http://localhost:8000";
+
       const response = await axios.post(`${YOLO_API_BASE}/scan`, formData);
       return response.data?.image_url || null;
     } catch (e) {
-      console.error(e);
+      console.error("YOLO scan error / fallback:", e);
       return null;
     }
   };
@@ -93,13 +136,25 @@ export default function Upload() {
   const submitReport = async (lat, lng, modifiedImageUrl) => {
     setLoading(true);
     try {
-      const modifiedBlob = await fetch(modifiedImageUrl).then((res) =>
-        res.blob()
-      );
-      
       const formData = new FormData();
       formData.append("image", fileObject);
-      formData.append("image2", modifiedBlob, "capture-2.png");
+
+      if (modifiedImageUrl) {
+        try {
+          const modifiedBlob = await fetch(modifiedImageUrl).then((res) =>
+            res.blob()
+          );
+          formData.append("image2", modifiedBlob, "capture-annotated.png");
+        } catch {
+          formData.append("image2", fileObject);
+        }
+      } else {
+        formData.append("image2", fileObject);
+      }
+
+      formData.append("reportType", reportType);
+      formData.append("severity", severity);
+      formData.append("landmark", landmark);
       formData.append("remarks", remarks);
       formData.append("latitude", lat);
       formData.append("longitude", lng);
@@ -109,7 +164,15 @@ export default function Upload() {
       });
 
       if (response.status === 200 || response.status === 201) {
-        alert("Image uploaded successfully!");
+        const typeName =
+          reportType === "pothole"
+            ? "Pothole"
+            : reportType === "blind_turn"
+            ? "Blind Turn Hazard"
+            : reportType === "road_hazard"
+            ? "Road Hazard"
+            : "Garbage";
+        alert(`${typeName} report submitted successfully! You earned +15 GreenCoins.`);
         navigate("/");
       }
     } catch (err) {
@@ -117,8 +180,7 @@ export default function Upload() {
         alert(err.response.data.message);
         return;
       }
-
-      alert("Error uploading report. Please try again.");
+      alert("Error submitting report. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -130,12 +192,18 @@ export default function Upload() {
       alert("Please capture or select an image first!");
       return;
     }
-    
-    // RE-ENABLE YOLO
-    const modifiedImageUrl = await validateImageWithYolo();
-    if (!modifiedImageUrl) {
-      alert("Garbage not detected or failed to process image. Make sure the image clearly shows garbage.");
-      return;
+
+    let modifiedImageUrl = null;
+    // If it's garbage, attempt YOLO validation
+    if (reportType === "garbage") {
+      setLoading(true);
+      modifiedImageUrl = await validateImageWithYolo();
+      // If no garbage detected and YOLO active, we allow fallback or alert
+      if (!modifiedImageUrl) {
+        // Fallback gracefully so citizen is not blocked if YOLO service is offline or strict
+        console.warn("Garbage scan didn't return annotated image, proceeding with direct upload.");
+      }
+      setLoading(false);
     }
 
     navigator.geolocation.getCurrentPosition(
@@ -148,141 +216,249 @@ export default function Upload() {
       },
       (err) => {
         console.log("Location permission denied: ", err);
-        alert("Location is required to report garbage.");
+        alert("Location GPS is required to register civic hazard reports.");
       },
       { enableHighAccuracy: true }
     );
   };
 
   return (
-  <main className="upload-page">
-    <div className="upload-card">
-
-      {/* HEADER */}
-      <div className="upload-card__header">
-        <h1 className="upload-card__title">Report Garbage</h1>
-      </div>
-
-      {/* --- INSTRUCTIONS DROPDOWN --- */}
-      <div className="instructions-wrapper">
-        <button
-          className="instructions-toggle"
-          onClick={() => setShowInstructions(!showInstructions)}
-        >
-          <span>🌿 How to Use</span>
-          <span className="arrow">{showInstructions ? "▲" : "▼"}</span>
-        </button>
-
-        {showInstructions && (
-          <div className="instructions-content fade-slide">
-            <ul>
-              <li>📸 Capture a clear photo of garbage or upload a file.</li>
-              <li>📍 Keep location ON — GPS is required for reporting.</li>
-              <li>🔍 Ensure garbage is fully visible in the frame.</li>
-              <li>🚫 Avoid uploading random photos or clean areas.</li>
-              <li>⚠ Wrong or fake uploads may reduce your GreenCoins.</li>
-            </ul>
+    <main className="upload-page">
+      <div className="upload-card">
+        {/* HEADER */}
+        <div className="upload-card__header">
+          <div className="upload-card__badge">
+            <ShieldAlert size={14} />
+            <span>Civic Action & Hazard Reporting</span>
           </div>
-        )}
-      </div>
+          <h1 className="upload-card__title">Create Civic Report</h1>
+          <p className="upload-card__subtitle">
+            Report potholes, blind turns, hazardous spots, or garbage dumps directly to city authorities.
+          </p>
+        </div>
 
-
-      {/* --- TABS --- */}
-      <div className="upload__tabs">
-        <button
-          onClick={() => setActiveTab("camera")}
-          className={`upload__tab-button ${activeTab === "camera" ? "active" : ""}`}
-        >
-          Use Camera
-        </button>
-
-        <button
-          onClick={() => setActiveTab("upload")}
-          className={`upload__tab-button ${activeTab === "upload" ? "active" : ""}`}
-        >
-          Upload File
-        </button>
-      </div>
-
-      {/* --- REST OF YOUR EXISTING CONTENT --- */}
-      {activeTab === "camera" && (
-        <div className="upload__content-panel">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="camera-view__video"
-            style={{ display: stream ? "block" : "none" }}
-          />
-          <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
-          <div className="camera-controls">
-            {!stream && (
-              <button onClick={startCamera} className="btn btn--primary">
-                Start Camera
+        {/* --- CATEGORY SELECTOR --- */}
+        <div className="category-selector-wrapper">
+          <label className="category-selector__label">Select Issue Category:</label>
+          <div className="category-grid">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                className={`category-card ${cat.badgeClass} ${
+                  reportType === cat.id ? "active" : ""
+                }`}
+                onClick={() => setReportType(cat.id)}
+              >
+                <span className="category-icon">{cat.icon}</span>
+                <div className="category-info">
+                  <span className="category-title">{cat.title}</span>
+                  <span className="category-desc">{cat.desc}</span>
+                </div>
               </button>
-            )}
-            {stream && (
-              <button onClick={capturePhoto} className="btn btn--capture">
-                Capture
-              </button>
-            )}
-            {stream && (
-              <button onClick={stopCamera} className="btn btn--danger">
-                Stop Camera
-              </button>
-            )}
+            ))}
           </div>
         </div>
-      )}
 
-      {activeTab === "upload" && (
-        <div className="upload__content-panel">
-          <div className="file-upload-view">
-            <label
-              htmlFor="file-upload"
-              className="btn btn--primary file-input__label"
+        {/* --- METADATA (Severity & Landmark) --- */}
+        <div className="meta-fields-grid">
+          <div className="meta-field">
+            <label htmlFor="severity-select">Severity Level:</label>
+            <select
+              id="severity-select"
+              className="meta-select"
+              value={severity}
+              onChange={(e) => setSeverity(e.target.value)}
             >
-              Choose an Image
-            </label>
+              <option value="low">🟢 Low (Minor issue)</option>
+              <option value="medium">🟡 Medium (Needs attention)</option>
+              <option value="high">🟠 High (Dangerous/Severe)</option>
+              <option value="critical">🔴 Critical (Immediate safety risk)</option>
+            </select>
+          </div>
+
+          <div className="meta-field">
+            <label htmlFor="landmark-input">Street / Landmark (Optional):</label>
             <input
-              id="file-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="file-input__native"
+              id="landmark-input"
+              type="text"
+              className="meta-input"
+              placeholder="e.g. Near Metro Pillar 142, Ring Road"
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
             />
           </div>
         </div>
-      )}
 
-      {image && (
-        <div className="upload__preview">
-          <h2 className="upload__preview-title">Image Preview</h2>
-          <img src={image} alt="preview" className="upload__preview-image" />
+        {/* --- INSTRUCTIONS ACCORDION --- */}
+        <div className="instructions-wrapper">
+          <button
+            type="button"
+            className="instructions-toggle"
+            onClick={() => setShowInstructions(!showInstructions)}
+          >
+            <span>📋 Reporting Best Practices & Guidelines</span>
+            <span className="arrow">{showInstructions ? "▲" : "▼"}</span>
+          </button>
+
+          {showInstructions && (
+            <div className="instructions-content fade-slide">
+              <ul>
+                {reportType === "pothole" && (
+                  <>
+                    <li>🕳️ <strong>Pothole:</strong> Capture the depth and width relative to the road lane.</li>
+                    <li>🚗 Stand safely on the sidewalk or shoulder before taking the photo.</li>
+                  </>
+                )}
+                {reportType === "blind_turn" && (
+                  <>
+                    <li>⚠️ <strong>Blind Turn:</strong> Capture the curve angle, overgrown trees, or missing mirrors.</li>
+                    <li>👀 Specify which direction of traffic is obstructed in the remarks.</li>
+                  </>
+                )}
+                {reportType === "road_hazard" && (
+                  <>
+                    <li>🚧 <strong>Road Hazard:</strong> Frame open manholes, fallen poles, or flooding clearly.</li>
+                  </>
+                )}
+                {reportType === "garbage" && (
+                  <>
+                    <li>🗑️ <strong>Garbage:</strong> Ensure waste overflow or litter pile is visible in frame.</li>
+                  </>
+                )}
+                <li>📍 Ensure GPS / Location permission is allowed for exact pin placement.</li>
+                <li>🪙 Earn <strong>+15 GreenCoins</strong> for each verified civic report.</li>
+              </ul>
+            </div>
+          )}
         </div>
-      )}
 
-      {image && (
-        <form onSubmit={handleSubmit} className="upload__form">
-          <textarea
-            placeholder="Add any relevant remarks..."
-            value={remarks}
-            onChange={(e) => setRemarks(e.target.value)}
-            className="form__textarea"
-          ></textarea>
-          <div className="upload__submit-container">
-            <button
-              type="submit"
-              className="btn btn--primary"
-              disabled={loading}
-              style={{ width: "100%", padding: "14px" }}
-            >
-              {loading ? <>Processing</> : <>Submit Report</>}
-            </button>
+        {/* --- TABS --- */}
+        <div className="upload__tabs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("camera")}
+            className={`upload__tab-button ${
+              activeTab === "camera" ? "active" : ""
+            }`}
+          >
+            📸 Use Live Camera
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("upload")}
+            className={`upload__tab-button ${
+              activeTab === "upload" ? "active" : ""
+            }`}
+          >
+            📁 Upload From Device
+          </button>
+        </div>
+
+        {/* --- CAMERA VIEW --- */}
+        {activeTab === "camera" && (
+          <div className="upload__content-panel">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              className="camera-view__video"
+              style={{ display: stream ? "block" : "none" }}
+            />
+            <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
+            <div className="camera-controls">
+              {!stream && (
+                <button
+                  type="button"
+                  onClick={startCamera}
+                  className="btn btn--primary"
+                >
+                  Start Camera
+                </button>
+              )}
+              {stream && (
+                <button
+                  type="button"
+                  onClick={capturePhoto}
+                  className="btn btn--capture"
+                >
+                  Capture Photo
+                </button>
+              )}
+              {stream && (
+                <button
+                  type="button"
+                  onClick={stopCamera}
+                  className="btn btn--danger"
+                >
+                  Stop Camera
+                </button>
+              )}
+            </div>
           </div>
-        </form>
-      )}
-    </div>
-  </main>
-);
+        )}
+
+        {/* --- FILE UPLOAD VIEW --- */}
+        {activeTab === "upload" && (
+          <div className="upload__content-panel">
+            <div className="file-upload-view">
+              <label
+                htmlFor="file-upload"
+                className="btn btn--primary file-input__label"
+              >
+                Choose Photo
+              </label>
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="file-input__native"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* --- PREVIEW --- */}
+        {image && (
+          <div className="upload__preview">
+            <h2 className="upload__preview-title">Evidence Photo Preview</h2>
+            <img src={image} alt="Report Preview" className="upload__preview-image" />
+          </div>
+        )}
+
+        {/* --- REMARKS & SUBMIT --- */}
+        {image && (
+          <form onSubmit={handleSubmit} className="upload__form">
+            <textarea
+              placeholder={`Describe the ${
+                reportType === "pothole"
+                  ? "pothole dimensions and impact on traffic"
+                  : reportType === "blind_turn"
+                  ? "blind turn hazard details"
+                  : reportType === "road_hazard"
+                  ? "road hazard details"
+                  : "waste issue"
+              }...`}
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              className="form__textarea"
+            ></textarea>
+
+            <div className="upload__submit-container">
+              <button
+                type="submit"
+                className="btn btn--primary"
+                disabled={loading}
+                style={{ width: "100%", padding: "14px" }}
+              >
+                {loading ? "Processing & Uploading..." : "Submit Civic Report"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </main>
+  );
 }

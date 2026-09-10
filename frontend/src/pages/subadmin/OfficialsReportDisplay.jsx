@@ -49,6 +49,9 @@ export default function OfficialsReportDisplay() {
   const {
     reportImg,
     reportYoloImg,
+    reportType,
+    severity,
+    landmark,
     location,
     remarks,
     status,
@@ -65,28 +68,30 @@ export default function OfficialsReportDisplay() {
       <div className="report-container">
         <header className="report-header">
           <h1 className="report-header__title">Report Details</h1>
-          <p className="report-header__id">ID: {id}</p>
+          <p className="report-header__id">Ticket #{id.slice(-6).toUpperCase()}</p>
         </header>
 
         <div className="report-body__grid">
           {/* --- Images Column --- */}
           <section className="report-images">
             <div className="image-display">
-              <h2 className="image-display__caption">Original Image</h2>
+              <h2 className="image-display__caption">Evidence Photo</h2>
               <img
                 src={reportImg}
                 alt="Original report"
                 className="image-display__img"
               />
             </div>
-            <div className="image-display">
-              <h2 className="image-display__caption">AI Processed Image</h2>
-              <img
-                src={reportYoloImg}
-                alt="YOLO processed report"
-                className="image-display__img"
-              />
-            </div>
+            {reportYoloImg && reportYoloImg !== reportImg && (
+              <div className="image-display">
+                <h2 className="image-display__caption">AI Processed Image</h2>
+                <img
+                  src={reportYoloImg}
+                  alt="YOLO processed report"
+                  className="image-display__img"
+                />
+              </div>
+            )}
           </section>
 
           {/* --- Details Column --- */}
@@ -94,6 +99,37 @@ export default function OfficialsReportDisplay() {
             <div className="info-box">
               <h2 className="info-box__title">Report Information</h2>
               <dl>
+                <dt>Category</dt>
+                <dd>
+                  <strong style={{ textTransform: "uppercase", color: "#0a6847" }}>
+                    {reportType === "pothole"
+                      ? "🕳️ Pothole / Road Surface"
+                      : reportType === "blind_turn"
+                      ? "⚠️ Blind Turn Hazard"
+                      : reportType === "road_hazard"
+                      ? "🚧 Road Obstruction"
+                      : "🗑️ Garbage / Waste"}
+                  </strong>
+                </dd>
+
+                <dt>Severity</dt>
+                <dd>
+                  <span style={{ 
+                    fontWeight: 700, 
+                    textTransform: "capitalize",
+                    color: severity === "critical" || severity === "high" ? "#dc2626" : "#2563eb"
+                  }}>
+                    {severity || "Medium"}
+                  </span>
+                </dd>
+
+                {landmark && (
+                  <>
+                    <dt>Landmark</dt>
+                    <dd>{landmark}</dd>
+                  </>
+                )}
+
                 <dt>Status</dt>
                 <dd>
                   <span className={`status-badge status--${status}`}>
@@ -101,7 +137,7 @@ export default function OfficialsReportDisplay() {
                   </span>
                 </dd>
 
-                <dt>Location</dt>
+                <dt>Location Coordinates</dt>
                 <dd>
                   {location && location.coordinates?.length === 2 ? (
                     <a
@@ -109,7 +145,7 @@ export default function OfficialsReportDisplay() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      View on Google Maps
+                      {location.coordinates[1].toFixed(5)}, {location.coordinates[0].toFixed(5)} (Open Maps ↗)
                     </a>
                   ) : (
                     "Not specified"
@@ -117,7 +153,7 @@ export default function OfficialsReportDisplay() {
                 </dd>
 
                 <dt>Remarks</dt>
-                <dd>{remarks || "No remarks provided."}</dd>
+                <dd>{remarks && remarks !== "NA" ? remarks : "No remarks provided."}</dd>
 
                 <dt>Submitted At</dt>
                 <dd>{new Date(time).toLocaleString()}</dd>

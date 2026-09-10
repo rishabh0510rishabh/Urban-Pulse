@@ -41,9 +41,9 @@ import {
 import "./Home.css";
 
 // Custom CSS-based marker icons for Leaflet
-const createMarkerIcon = (status) => {
+const createMarkerIcon = (typeOrStatus) => {
   return L.divIcon({
-    className: `marker-pin marker-pin--${status || "pending"}`,
+    className: `marker-pin marker-pin--${typeOrStatus || "pending"}`,
     iconSize: [32, 42],
     iconAnchor: [16, 42],
     popupAnchor: [0, -38],
@@ -329,7 +329,19 @@ export default function Home() {
             <div className="legend-items">
               <span className="legend-item">
                 <span className="legend-marker legend-marker--pending" />
-                <span>Pending Report</span>
+                <span>Garbage</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-marker legend-marker--pothole" />
+                <span>Pothole</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-marker legend-marker--blind_turn" />
+                <span>Blind Turn</span>
+              </span>
+              <span className="legend-item">
+                <span className="legend-marker legend-marker--road_hazard" />
+                <span>Road Hazard</span>
               </span>
               <span className="legend-item">
                 <span className="legend-marker legend-marker--allotted" />
@@ -337,7 +349,7 @@ export default function Home() {
               </span>
               <span className="legend-item">
                 <span className="legend-marker legend-marker--resolved" />
-                <span>Resolved Incident</span>
+                <span>Resolved</span>
               </span>
               <span className="legend-item">
                 <span className="legend-marker legend-marker--event" />
@@ -371,6 +383,24 @@ export default function Home() {
                     r.location.coordinates.length < 2
                   )
                     return null;
+
+                  // Marker icon priority: if resolved/allotted or specific hazard type
+                  const markerType =
+                    r.status === "resolved"
+                      ? "resolved"
+                      : r.status === "allotted"
+                      ? "allotted"
+                      : r.reportType || "pending";
+
+                  const categoryEmoji =
+                    r.reportType === "pothole"
+                      ? "🕳️ Pothole"
+                      : r.reportType === "blind_turn"
+                      ? "⚠️ Blind Turn"
+                      : r.reportType === "road_hazard"
+                      ? "🚧 Road Hazard"
+                      : "🗑️ Garbage Report";
+
                   return (
                     <Marker
                       key={r._id}
@@ -378,19 +408,34 @@ export default function Home() {
                         r.location.coordinates[1],
                         r.location.coordinates[0],
                       ]}
-                      icon={createMarkerIcon(r.status)}
+                      icon={createMarkerIcon(markerType)}
                     >
                       <Popup className="pulse-popup">
                         <div className="popup-card">
                           <div className="popup-card__header">
-                            <span className="popup-badge">Incident Report</span>
+                            <span className="popup-badge">{categoryEmoji}</span>
                             <span className={`status-pill status-pill--${r.status}`}>
                               {r.status || "pending"}
                             </span>
                           </div>
+                          {r.severity && (
+                            <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#64748b" }}>
+                              Severity: <span style={{ textTransform: "capitalize", color: r.severity === "critical" || r.severity === "high" ? "#dc2626" : "#2563eb" }}>{r.severity}</span>
+                            </div>
+                          )}
+                          {r.landmark && (
+                            <div style={{ fontSize: "0.82rem", color: "#334155" }}>
+                              📍 {r.landmark}
+                            </div>
+                          )}
                           <div className="popup-card__id">
                             Ticket #{r._id ? r._id.slice(-6).toUpperCase() : "N/A"}
                           </div>
+                          {r.remarks && r.remarks !== "NA" && (
+                            <div style={{ fontSize: "0.8rem", color: "#475569", fontStyle: "italic" }}>
+                              "{r.remarks}"
+                            </div>
+                          )}
                           {r.time && (
                             <div className="popup-card__time">
                               {new Date(r.time).toLocaleDateString("en-IN", {

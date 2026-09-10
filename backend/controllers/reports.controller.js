@@ -16,7 +16,7 @@ exports.getAllReports = async (req, res) => {
 };
 // Create a new report with location + images
 exports.createReport = async (req, res) => {
-  const { latitude, longitude, remarks } = req.body;
+  const { latitude, longitude, remarks, reportType = "garbage", severity = "medium", landmark = "" } = req.body;
 
   if (!latitude || !longitude) {
     return res.status(400).json({ message: "Location coordinates required" });
@@ -32,19 +32,27 @@ exports.createReport = async (req, res) => {
         $maxDistance: RADIUS_METERS,
       },
     },
+    reportType: reportType,
     status: { $in: ["pending", "allotted", "in-progress"] },
   });
 
   if (existingReport) {
+    const typeLabel =
+      reportType === "pothole"
+        ? "pothole"
+        : reportType === "blind_turn"
+        ? "blind turn hazard"
+        : reportType === "road_hazard"
+        ? "road hazard"
+        : "garbage";
     return res.status(409).json({
-      message:
-        "A report near your location is already under process. A collection vehicle has been dispatched. Thank you for helping keep the city clean!",
+      message: `A ${typeLabel} report near your location is already under process. Our response team is on it. Thank you for keeping our city safe and clean!`,
     });
   }
 
-  // ------------------- STEP 2: Ensure images exist -------------------
-  if (!req.files || !req.files.image || !req.files.image2) {
-    return res.status(400).json({ message: "Both images must be uploaded." });
+  // ------------------- STEP 2: Ensure primary image exists -------------------
+  if (!req.files || !req.files.image || !req.files.image[0]) {
+    return res.status(400).json({ message: "An image must be uploaded." });
   }
 
   // ------------------- STEP 3: Upload NOW (after validation passes) -------------------
@@ -59,7 +67,12 @@ exports.createReport = async (req, res) => {
   };
 
   const imageUrl1 = await uploadBufferToCloudinary(req.files.image[0].buffer);
-  const imageUrl2 = await uploadBufferToCloudinary(req.files.image2[0].buffer);
+  let imageUrl2 = "";
+  if (req.files.image2 && req.files.image2[0]) {
+    imageUrl2 = await uploadBufferToCloudinary(req.files.image2[0].buffer);
+  } else {
+    imageUrl2 = imageUrl1; // Default to original if no modified/yolo image
+  }
 
   const userId = req.user?._id;
   if (!userId) {
@@ -70,6 +83,9 @@ exports.createReport = async (req, res) => {
   const newReport = await Report.create({
     reportImg: imageUrl1,
     reportYoloImg: imageUrl2,
+    reportType,
+    severity,
+    landmark,
     remarks,
     status: "pending",
     reportOwner: userId,

@@ -19,6 +19,7 @@ const createMarkerIcon = (status) => {
 export default function OfficialsDashboard() {
   const navigate = useNavigate();
   const [allReports, setAllReports] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [events, setEvents] = useState([]);
   const [location, setLocation] = useState({ latitude: null, longitude: null });
 
@@ -154,6 +155,11 @@ export default function OfficialsDashboard() {
     setSelectedReportId(null);
     setActiveOsps([]);
   };
+
+  const filteredReportsList = useMemo(() => {
+    if (categoryFilter === "all") return allReports;
+    return allReports.filter((r) => (r.reportType || "garbage") === categoryFilter);
+  }, [allReports, categoryFilter]);
 
   const stats = useMemo(() => {
     const total = allReports.length;
@@ -319,12 +325,36 @@ export default function OfficialsDashboard() {
       <section className="dashboard-module">
         {!showOspSelection ? (
           <>
-            <h2 className="module-header">All Reports</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '10px' }}>
+              <h2 className="module-header" style={{ margin: 0 }}>All Civic Reports</h2>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: 600, color: '#64748b' }}>Filter Category:</span>
+                <select 
+                  className="meta-select"
+                  style={{ padding: '6px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.88rem' }}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    // If filter state exists, or use local filtering
+                    setCategoryFilter(selected);
+                  }}
+                  value={categoryFilter}
+                >
+                  <option value="all">All Categories</option>
+                  <option value="garbage">🗑️ Garbage</option>
+                  <option value="pothole">🕳️ Potholes</option>
+                  <option value="blind_turn">⚠️ Blind Turns</option>
+                  <option value="road_hazard">🚧 Road Hazards</option>
+                </select>
+              </div>
+            </div>
+
             <div className="table-container">
               <table className="reports-table">
                 <thead>
                   <tr>
                     <th>Report ID</th>
+                    <th>Category</th>
+                    <th>Severity / Location</th>
                     <th>Time</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -332,9 +362,60 @@ export default function OfficialsDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {allReports.map((r) => (
+                  {filteredReportsList.map((r) => (
                     <tr key={r._id}>
-                      <td>{r._id.slice(-6)}...</td>
+                      <td>#{r._id.slice(-6).toUpperCase()}</td>
+                      <td>
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          backgroundColor:
+                            r.reportType === 'pothole'
+                              ? '#ffedd5'
+                              : r.reportType === 'blind_turn'
+                              ? '#fef9c3'
+                              : r.reportType === 'road_hazard'
+                              ? '#fee2e2'
+                              : '#d1fae5',
+                          color:
+                            r.reportType === 'pothole'
+                              ? '#c2410c'
+                              : r.reportType === 'blind_turn'
+                              ? '#854d0e'
+                              : r.reportType === 'road_hazard'
+                              ? '#b91c1c'
+                              : '#047857',
+                        }}>
+                          {r.reportType === 'pothole'
+                            ? '🕳️ Pothole'
+                            : r.reportType === 'blind_turn'
+                            ? '⚠️ Blind Turn'
+                            : r.reportType === 'road_hazard'
+                            ? '🚧 Hazard'
+                            : '🗑️ Garbage'}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '0.85rem' }}>
+                          <span style={{ 
+                            textTransform: 'capitalize', 
+                            fontWeight: 600,
+                            color: r.severity === 'critical' || r.severity === 'high' ? '#dc2626' : '#4b5563' 
+                          }}>
+                            {r.severity || 'medium'}
+                          </span>
+                          {r.landmark && (
+                            <div style={{ fontSize: '0.78rem', color: '#6b7280' }}>
+                              📍 {r.landmark}
+                            </div>
+                          )}
+                        </div>
+                      </td>
                       <td>{new Date(r.time).toLocaleString()}</td>
                       <td>
                         <span className={`status-badge status--${r.status}`}>
@@ -354,10 +435,10 @@ export default function OfficialsDashboard() {
                           {loading
                             ? "Processing"
                             : r.status === "pending"
-                            ? "Allot Report"
+                            ? "Allot Task"
                             : r.status === "allotted"
-                            ? "Report Allotted"
-                            : "Close Report"}
+                            ? "Task Allotted"
+                            : "Close Ticket"}
                         </button>
                       </td>
                       <td>

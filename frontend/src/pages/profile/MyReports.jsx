@@ -67,16 +67,33 @@ function MyReports() {
                         />
                         <div className="aspirely-report-card-content">
                             <div className="aspirely-report-card-header">
-                                <span className={`aspirely-report-status ${getStatusClass(report.status)}`}>
-                                    {report.status}
-                                </span>
+                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <span className={`aspirely-category-badge aspirely-category-${report.reportType || 'garbage'}`}>
+                                        {report.reportType === 'pothole'
+                                            ? '🕳️ Pothole'
+                                            : report.reportType === 'blind_turn'
+                                            ? '⚠️ Blind Turn'
+                                            : report.reportType === 'road_hazard'
+                                            ? '🚧 Hazard'
+                                            : '🗑️ Garbage'}
+                                    </span>
+                                    <span className={`aspirely-report-status ${getStatusClass(report.status)}`}>
+                                        {report.status}
+                                    </span>
+                                </div>
                                 <span className="aspirely-report-card-date">
                                     {formatDate(report.time || report.createdAt)}
                                 </span>
                             </div>
+
+                            {report.landmark && (
+                                <div style={{ fontSize: '0.85rem', color: '#4b5563', marginBottom: '6px', fontWeight: 500 }}>
+                                    📍 {report.landmark}
+                                </div>
+                            )}
                             
                             <p className="aspirely-report-card-remarks">
-                                {report.remarks}
+                                {report.remarks && report.remarks !== "NA" ? report.remarks : "No additional remarks"}
                             </p>
 
                             <div className="aspirely-report-card-footer">
@@ -90,7 +107,7 @@ function MyReports() {
                                     View Location
                                 </a>
                                 
-                                {/* Conditionally render button ONLY if reportYoloImg exists */}
+                                {/* Conditionally render button ONLY if reportYoloImg exists and differs from original */}
                                 {report.reportYoloImg && (
                                     <a 
                                         href={report.reportYoloImg} 

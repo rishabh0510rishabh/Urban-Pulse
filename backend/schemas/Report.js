@@ -8,6 +8,21 @@ const reportSchema = new mongoose.Schema(
     },
     reportYoloImg: {
       type: String,
+      default: "",
+    },
+    reportType: {
+      type: String,
+      enum: ["garbage", "pothole", "blind_turn", "road_hazard"],
+      default: "garbage",
+    },
+    severity: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "medium",
+    },
+    landmark: {
+      type: String,
+      default: "",
     },
     location: {
       type: {

@@ -1,6 +1,6 @@
-# 🚀 UrbanPulse / GreenSathi Deployment Guide
+# 🚀 UrbanPulse Deployment Guide
 
-This guide provides end-to-end instructions for deploying the **UrbanPulse (GreenSathi)** full-stack application across cloud platforms.
+This guide provides end-to-end instructions for deploying the **UrbanPulse** full-stack application across cloud platforms.
 
 ---
 

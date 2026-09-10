@@ -599,11 +599,18 @@
   z-index: 1000;
 }
 
-.marker-pin--pending { background-color: var(--color-status-pending); }
-.marker-pin--allotted { background-color: var(--color-status-allotted); }
-.marker-pin--resolved { background-color: var(--color-status-resolved); }
-.marker-pin--event { background-color: var(--color-status-event); }
-.marker-pin--franchisee { background-color: var(--color-status-franchisee); }
+.marker-pin--pending { background-color: #10b981; }
+.marker-pin--pothole { background-color: #ea580c; }
+.marker-pin--blind_turn { background-color: #eab308; }
+.marker-pin--road_hazard { background-color: #ef4444; }
+.marker-pin--allotted { background-color: #3b82f6; }
+.marker-pin--resolved { background-color: #059669; }
+.marker-pin--event { background-color: #8b5cf6; }
+.marker-pin--franchisee { background-color: #0284c7; }
+
+.legend-marker--pothole { background-color: #ea580c; }
+.legend-marker--blind_turn { background-color: #eab308; }
+.legend-marker--road_hazard { background-color: #ef4444; }
 
 /* Popup Overrides */
 .pulse-popup .leaflet-popup-content-wrapper {
