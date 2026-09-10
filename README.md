@@ -83,7 +83,7 @@ npm install
    ```
 3. Start the server:
    ```bash
-   npm start
+   npm start 
    ```
    Server will run on `http://localhost:5000`.
 
@@ -93,7 +93,7 @@ npm install
 
 ```bash
 cd frontend
-npm install
+npm install 
 ```
 
 1. Configure `frontend/.env`:
