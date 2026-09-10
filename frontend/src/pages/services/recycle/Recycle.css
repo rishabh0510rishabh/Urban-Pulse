@@ -326,7 +326,11 @@
   text-align: center;
 }
 
-.empty-state {
+.empty-state,
+.recycle-page .empty-state {
+  display: block;
+  min-height: auto;
+  height: auto;
   text-align: center;
   padding: 3rem;
   color: var(--color-text);
@@ -501,6 +505,20 @@ select.form__input:focus {
 }
 
 /* Vendor Events */
+
+.vendor-events-section {
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.vendor-events-section .empty-state {
+  display: block;
+  min-height: auto;
+  height: auto;
+  opacity: 1;
+  box-shadow: var(--shadow-sm);
+}
 
 .vendor-events-grid {
   display: grid;
@@ -769,6 +787,7 @@ select.form__input:focus {
 
   .how-it-works,
   .waste-types-section,
+  .vendor-events-section,
   .franchisees-section,
   .submit-form-section {
     padding: 3rem 1rem;
