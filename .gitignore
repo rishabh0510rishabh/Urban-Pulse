@@ -15,6 +15,9 @@ node_modules/
 .env.production.local
 .env.vercel*
 .vercel
+
+# Android App Subproject
+urban-pulse-apk/
 *.env
 *.env.local
 atlas-credentials.env
