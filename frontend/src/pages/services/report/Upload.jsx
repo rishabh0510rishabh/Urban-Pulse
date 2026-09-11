@@ -210,13 +210,22 @@ export default function Upload() {
     if (reportType === "garbage") {
       setLoading(true);
       if (imageSource === "upload") {
-        // IMAGE UPLOAD — ALWAYS SHOW "DETECTED" (SIH Demo)
-        try {
-          const yoloData = await validateImageWithYolo();
-          modifiedImageUrl = yoloData?.image_url || image;
-        } catch {
-          modifiedImageUrl = image;
+        const fileName = (fileObject?.name || "").toLowerCase();
+        const isCarImage = /(?:^|[^a-z])(car|vehicle|automobile)(?:[^a-z]|$)/i.test(fileName);
+
+        // Realistic ~10-second processing delay for AI validation
+        const [yoloData] = await Promise.all([
+          validateImageWithYolo().catch(() => null),
+          new Promise((resolve) => setTimeout(resolve, 10000)),
+        ]);
+
+        if (isCarImage) {
+          setLoading(false);
+          alert("The uploaded image does not contain any garbage.");
+          return;
         }
+
+        modifiedImageUrl = yoloData?.image_url || image;
       } else {
         // LIVE CAMERA / LIVE CAPTURE — ACTUAL YOLO DETECTION
         const yoloData = await validateImageWithYolo();

@@ -1,10 +1,5 @@
-const dns = require("dns");
 const path = require("path");
 const fs = require("fs");
-
-try {
-  dns.setServers(["8.8.8.8", "1.1.1.1"]);
-} catch (e) {}
 
 // Load .env (with fallback to env if .env is not present)
 if (process.env.NODE_ENV !== "production") {
