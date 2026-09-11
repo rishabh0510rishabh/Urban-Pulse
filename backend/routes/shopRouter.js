@@ -18,6 +18,7 @@ router.patch('/:id/increase-qty', isLoggedIn, wrapAsync(shopController.increaseI
 router.patch('/:id/decrease-qty', isLoggedIn, wrapAsync(shopController.decreaseItemQty));
 
 // Payments — any logged-in user
+router.post('/checkout', isLoggedIn, wrapAsync(shopController.checkout));
 router.post('/create-rzp-order', isLoggedIn, wrapAsync(shopController.createRazorpayOrder));
 router.post('/verify-rzp-payment', isLoggedIn, wrapAsync(shopController.verifyRazorpayOrder));
 router.post('/place-order', isLoggedIn, wrapAsync(shopController.placeOrder));
