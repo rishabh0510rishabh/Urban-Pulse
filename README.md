@@ -41,7 +41,6 @@
 ---
 
 ## 🧩 Tech Stack
-
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend** | React, React Router, Leaflet / Maps, Chart.js, Lucide Icons, Vanilla CSS Design System |
