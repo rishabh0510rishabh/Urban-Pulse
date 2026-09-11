@@ -14,12 +14,23 @@ const wasteSubmissionSchema = new mongoose.Schema(
     },
     weightKg: {
       type: Number,
-      required: true,
-      min: 0.1,
+      default: 0,
+      min: 0,
     },
     estimatedAmount: {
       type: Number,
-      required: true,
+      default: 0,
+      min: 0,
+    },
+    itemName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    itemDescription: {
+      type: String,
+      trim: true,
+      default: "",
     },
     franchisee: {
       type: mongoose.Schema.Types.ObjectId,

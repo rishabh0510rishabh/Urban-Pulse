@@ -63,7 +63,7 @@ module.exports.createRecycleRequest = async (req, res) => {
   try {
     const userId = req.user?._id;
     if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ message: "Unauthorized. Please log in." });
     }
 
     const {
@@ -75,36 +75,46 @@ module.exports.createRecycleRequest = async (req, res) => {
       images,
     } = req.body;
 
-    if (!wasteTypeId || !franchiseeId) {
+    if (!wasteTypeId) {
       return res.status(400).json({
-        message: "wasteTypeId and franchiseeId are required",
+        message: "Please select a waste type",
       });
     }
 
     const wasteType = await WasteType.findById(wasteTypeId);
     if (!wasteType) {
-      return res.status(404).json({ message: "Invalid waste type" });
+      return res.status(404).json({ message: "Selected waste type is invalid" });
     }
 
-    const franchisee = await Franchisee.findById(franchiseeId);
-    if (!franchisee || !franchisee.isActive) {
+    let franchisee = null;
+    if (franchiseeId) {
+      franchisee = await Franchisee.findById(franchiseeId);
+    }
+    if (!franchisee) {
+      franchisee = await Franchisee.findOne({ isActive: { $ne: false } });
+    }
+    if (!franchisee) {
       return res
         .status(404)
-        .json({ message: "Franchisee not found or inactive" });
+        .json({ message: "No active collection center found" });
     }
 
+    const parsedWeight = parseFloat(weightKg);
+    const validWeight = !isNaN(parsedWeight) && parsedWeight > 0 ? parsedWeight : 0;
+    const pricePerKg = wasteType.pricePerKg || 0;
     const estimatedAmount =
-      weightKg && wasteType.pricePerKg ? weightKg * wasteType.pricePerKg : 0;
+      validWeight > 0 ? Math.round(validWeight * pricePerKg * 100) / 100 : 0;
 
     const submission = await WasteSubmission.create({
       user: userId,
-      wasteType: wasteTypeId,
-      franchisee: franchiseeId,
-      weightKg: weightKg || null,
+      wasteType: wasteType._id,
+      franchisee: franchisee._id,
+      weightKg: validWeight,
       estimatedAmount,
-      itemName: itemName || "",
-      itemDescription: itemDescription || "",
-      images: images || [],
+      itemName: itemName ? itemName.trim() : (wasteType.name || "Recyclable Item"),
+      itemDescription: itemDescription ? itemDescription.trim() : "",
+      notes: itemDescription || itemName || "",
+      images: Array.isArray(images) ? images : [],
       status: "pending",
     });
 
@@ -114,8 +124,13 @@ module.exports.createRecycleRequest = async (req, res) => {
     });
   } catch (err) {
     console.error("Error creating recycle request:", err);
+    if (err.name === "ValidationError") {
+      return res.status(400).json({
+        message: err.message,
+      });
+    }
     return res.status(500).json({
-      message: "Server error",
+      message: err.message || "Server error while creating recycle request",
       error: err.message,
     });
   }

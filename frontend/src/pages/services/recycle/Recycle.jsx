@@ -31,6 +31,23 @@ function Recycle() {
         console.error("Failed to fetch recycle types", err);
       }
 
+      // Immediately fetch all collection centers so centers are always available in the form
+      try {
+        const allFranRes = await api.get("/recycle/franchisees");
+        const list = Array.isArray(allFranRes.data?.franchisees)
+          ? allFranRes.data.franchisees
+          : [];
+        if (list.length > 0) {
+          setFranchisees(list);
+          setFormData((prev) => ({
+            ...prev,
+            franchiseeId: prev.franchiseeId || list[0]._id,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch collection centers:", err);
+      }
+
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
@@ -41,7 +58,16 @@ function Recycle() {
               const franRes = await api.get(
                 `/recycle/franchisees/near-me?lat=${lat}&lng=${lng}&radiusKm=25`
               );
-              setFranchisees(franRes.data?.franchisees || []);
+              const nearby = franRes.data?.franchisees || [];
+              if (nearby.length > 0) {
+                setFranchisees(nearby);
+                setFormData((prev) => ({
+                  ...prev,
+                  franchiseeId: nearby.some((f) => f._id === prev.franchiseeId)
+                    ? prev.franchiseeId
+                    : nearby[0]._id,
+                }));
+              }
             } catch (err) {
               console.error("Failed to fetch franchisees near user:", err);
             }
@@ -96,7 +122,7 @@ function Recycle() {
     try {
       const res = await api.post("/recycle/create", formData);
 
-      if (res.status === 201) {
+      if (res.status === 200 || res.status === 201) {
         setMessage({
           type: "success",
           text: "Recycle request submitted! Franchisee will review it.",
@@ -104,7 +130,7 @@ function Recycle() {
 
         setFormData({
           wasteTypeId: "",
-          franchiseeId: "",
+          franchiseeId: franchisees[0]?._id || "",
           itemName: "",
           itemDescription: "",
           weightKg: "",
