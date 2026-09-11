@@ -82,16 +82,6 @@ export default function OfficialsReportDisplay() {
                 className="image-display__img"
               />
             </div>
-            {reportYoloImg && reportYoloImg !== reportImg && (
-              <div className="image-display">
-                <h2 className="image-display__caption">AI Processed Image</h2>
-                <img
-                  src={reportYoloImg}
-                  alt="YOLO processed report"
-                  className="image-display__img"
-                />
-              </div>
-            )}
           </section>
 
           {/* --- Details Column --- */}
