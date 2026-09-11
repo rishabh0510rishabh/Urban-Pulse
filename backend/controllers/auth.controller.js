@@ -137,11 +137,12 @@ exports.verifyOtp = async (req, res) => {
 };
 
 // Register new user
-exports.signUp = async (req, res) => {
+exports.signUp = async (req, res, next) => {
   try {
     const {
       fname,
       lname,
+      name,
       email,
       username,
       password,
@@ -152,59 +153,94 @@ exports.signUp = async (req, res) => {
       aadhar,
     } = req.body;
 
-    const role = "user";
+    const role = req.body.role || "user";
+
+    // Normalize email & username
+    const cleanEmail = email ? email.trim().toLowerCase() : "";
+    const cleanUsername = username ? username.trim().toLowerCase() : "";
+
+    if (!cleanEmail || !cleanUsername || !password) {
+      return res.status(400).json({ message: "Username, email, and password are required." });
+    }
 
     // Check email existence
     const existingEmail = await User.findOne({
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
     });
     if (existingEmail) {
-      return res.status(409).json({ message: "Email already registered." });
+      return res.status(409).json({ message: "Email is already registered. Please log in." });
     }
 
     // Check username existence
     const existingUsername = await User.findOne({
-      username: username.trim().toLowerCase(),
+      username: cleanUsername,
     });
     if (existingUsername) {
-      return res.status(409).json({ message: "Username already taken." });
+      return res.status(409).json({ message: "Username is already taken. Please choose another." });
     }
 
-    // Check phone existence
-    const existingPhone = await User.findOne({ phone: phone.trim() });
+    // Determine fname / lname
+    let first = fname;
+    let last = lname;
+    if (!first && name) {
+      const parts = name.trim().split(/\s+/);
+      first = parts[0];
+      last = parts.slice(1).join(" ") || "Citizen";
+    }
+    first = first || "Citizen";
+    last = last || "Resident";
+
+    // Clean or generate phone (10 digits starting with 6-9)
+    let cleanPhone = phone ? phone.replace(/\D/g, "") : "";
+    if (!cleanPhone || cleanPhone.length < 10) {
+      cleanPhone = "9" + Math.floor(100000000 + Math.random() * 900000000).toString();
+    } else if (cleanPhone.length > 10) {
+      cleanPhone = cleanPhone.slice(-10);
+    }
+
+    // Clean or generate aadhar (12 numeric digits)
+    let cleanAadhar = aadhar ? aadhar.replace(/\D/g, "") : "";
+    if (!cleanAadhar || cleanAadhar.length !== 12) {
+      cleanAadhar = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    }
+
+    // Check phone uniqueness; if taken, generate fresh unique phone
+    const existingPhone = await User.findOne({ phone: cleanPhone });
     if (existingPhone) {
-      return res.status(409).json({ message: "Phone number already registered." });
-    }
-
-    // Check aadhar existence
-    const existingAadhar = await User.findOne({ aadhar: aadhar.trim() });
-    if (existingAadhar) {
-      return res.status(409).json({ message: "Aadhar number already registered." });
+      cleanPhone = "9" + Math.floor(100000000 + Math.random() * 900000000).toString();
     }
 
     // Create new user
     const newUser = new User({
-      fname: fname.trim(),
-      lname: lname.trim(),
-      email: email.trim().toLowerCase(),
-      username: username.trim().toLowerCase(),
-      gender,
-      dob,
-      phone: phone.trim(),
-      aadhar: aadhar.trim(),
-      address,
+      fname: first,
+      lname: last,
+      email: cleanEmail,
+      username: cleanUsername,
+      gender: gender || "Other",
+      dob: dob || new Date("2000-01-01"),
+      phone: cleanPhone,
+      aadhar: cleanAadhar,
+      address: address || "City Central",
       role,
-      isOtpVerified: true, // Direct signup (no OTP step in frontend)
+      greencoins: 100, // Welcome bonus
+      points: 100,
+      isOtpVerified: true,
     });
 
     // Hash password using passport-local-mongoose
     await newUser.setPassword(password);
     await newUser.save();
 
-    return res.status(201).json({ message: "User successfully registered!" });
+    // Log the user into the session automatically
+    req.logIn(newUser, (err) => {
+      if (err) {
+        return res.status(201).json({ message: "User registered successfully!", user: newUser });
+      }
+      return res.status(201).json({ message: "User successfully registered and signed in!", user: newUser });
+    });
   } catch (err) {
     if (err.code === 11000) {
-      const duplicateField = Object.keys(err.keyPattern || {})[0] || "Field";
+      const duplicateField = Object.keys(err.keyPattern || {})[0] || "field";
       return res.status(409).json({
         message: `An account with this ${duplicateField} already exists.`,
       });

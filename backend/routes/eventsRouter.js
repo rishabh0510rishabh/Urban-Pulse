@@ -33,6 +33,7 @@ router.get("/:id", wrapAsync(getEventById));
 
 // Register user for event — any logged-in user
 router.post("/:id", isLoggedIn, wrapAsync(registerForEvent));
+router.post("/:id/rsvp", isLoggedIn, wrapAsync(registerForEvent));
 
 // Update event — admin or official only
 router.put("/:id", isLoggedIn, requireRole("admin", "official"), wrapAsync(updateEvent));
