@@ -5,7 +5,7 @@
 
 ---
 
-## 🌟 Key Highlights
+## 🌟 Key Highlights 
 
 - 📹 **Automated AI Surveillance**: Real-time CCTV stream analysis with YOLOv8 to detect littered zones, overflowing bins, and public cleanliness violations.
 - 📱 **Citizen Crowdsourced Reporting**: Geo-tagged reporting portal with camera capture, instant AI validation, and progress tracking.
