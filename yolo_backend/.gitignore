@@ -2,3 +2,6 @@ __pycache__
 uploads
 yolovenv
 venv
+.env
+.env.*
+!.env.example

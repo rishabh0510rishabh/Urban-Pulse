@@ -283,3 +283,29 @@ a:hover {
   color: var(--color-text-muted);
   border: 1px solid var(--color-border);
 }
+
+/* ==========================================================================
+   Botpress Webchat Global Positioning & Safe Bounds
+   ========================================================================== */
+#bp-web-widget-container,
+div[id^="bp-web-widget"],
+.bp-widget-web,
+iframe[id^="bp-web-widget"],
+iframe[title*="Chatbot"],
+iframe[title*="Botpress"],
+div[class*="bpWebchat"] {
+  z-index: 9999 !important;
+}
+
+@media (max-width: 640px) {
+  #bp-web-widget-container,
+  div[id^="bp-web-widget"],
+  .bp-widget-web,
+  iframe[id^="bp-web-widget"],
+  iframe[title*="Chatbot"],
+  iframe[title*="Botpress"] {
+    max-width: calc(100vw - 20px) !important;
+    right: 12px !important;
+    bottom: 12px !important;
+  }
+}

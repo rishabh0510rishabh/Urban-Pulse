@@ -24,6 +24,7 @@ const MongoStore = require("connect-mongo");
 
 // --- Utils ---
 const ExpressError = require("./utils/ExpressError.js");
+const { seedDemoUsers } = require("./utils/demoAccounts.js");
 
 // -- Routers --
 const authRouter = require('./routes/authRouter.js');
@@ -62,8 +63,9 @@ if (!dbURI) {
 
 const clientPromise = mongoose
   .connect(dbURI)
-  .then((m) => {
+  .then(async (m) => {
     console.log("Connection to MongoDB successful!");
+    await seedDemoUsers();
     return m.connection.getClient();
   })
   .catch((err) => {

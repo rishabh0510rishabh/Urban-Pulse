@@ -2,6 +2,7 @@ const User = require("../schemas/User");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const passport = require("passport");
+const { DEMO_ACCOUNTS } = require("../utils/demoAccounts");
 
 // Check if user is authenticated
 exports.checkAuth = async (req, res) => {
@@ -262,6 +263,35 @@ exports.loginUser = async (req, res, next) => {
       } else {
         req.body.username = input;
       }
+    }
+
+    // SIH Prototype Demo Account handler
+    const matchedDemo = DEMO_ACCOUNTS.find(
+      (d) => d.username.toLowerCase() === req.body.username?.toLowerCase()
+    );
+
+    if (matchedDemo) {
+      if (req.body.password !== matchedDemo.password) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      let user = await User.findOne({ username: matchedDemo.username.toLowerCase() });
+      if (!user) {
+        user = new User({
+          ...matchedDemo,
+          username: matchedDemo.username.toLowerCase(),
+        });
+        await user.setPassword(matchedDemo.password);
+        await user.save();
+      } else if (user.role !== matchedDemo.role) {
+        user.role = matchedDemo.role;
+        await user.save();
+      }
+
+      return req.logIn(user, (err) => {
+        if (err) return next(err);
+        return res.status(200).json({ message: "Login successful!", user });
+      });
     }
 
     passport.authenticate("local", (err, user, info) => {
