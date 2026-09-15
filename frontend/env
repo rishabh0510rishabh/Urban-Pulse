@@ -1,8 +1,0 @@
-REACT_APP_ENVIRONMENT=development
-REACT_APP_API_URL_LOCAL=http://localhost:5000
-REACT_APP_API_URL_PROD=https://urban-pulse-o4yc.onrender.com
-REACT_APP_API_URL_YOLO_LOCAL=http://localhost:8000
-REACT_APP_API_URL_YOLO_PROD=https://urban-pulse-yolo.onrender.com
-REACT_APP_RAZORPAY_KEY_ID=rzp_test_TXFKcUuFCKkcMY
-CI=false
-GENERATE_SOURCEMAP=false
