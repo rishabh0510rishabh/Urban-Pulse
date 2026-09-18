@@ -1,3 +1,5 @@
+const fs = require("fs");
+const path = require("path");
 const Report = require("../schemas/Report");
 const User = require("../schemas/User");
 
@@ -102,35 +104,82 @@ exports.createReport = async (req, res) => {
     });
   };
 
-  let imageUrl1 = null;
-  let imageUrl2 = null;
+  const saveBufferLocally = (buffer, prefix = "report") => {
+    try {
+      const uploadsDir = path.join(__dirname, "..", "uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const filename = `${prefix}_${Date.now()}_${Math.round(Math.random() * 1e9)}.jpg`;
+      const filePath = path.join(uploadsDir, filename);
+      fs.writeFileSync(filePath, buffer);
+      const host = req.get("host") || "localhost:5000";
+      const protocol = req.protocol || "http";
+      return `${protocol}://${host}/uploads/${filename}`;
+    } catch (saveErr) {
+      console.error("Error saving file locally:", saveErr);
+      return null;
+    }
+  };
 
+  let imageUrl1 = null; // Original citizen photo
+  let imageUrl2 = null; // YOLO annotated photo
+
+  // 1. Process Original Upload
   if (req.files && req.files.image && req.files.image[0]) {
     try {
       imageUrl1 = await uploadBufferToCloudinary(req.files.image[0].buffer);
     } catch (e) {
       imageUrl1 = null;
     }
-  }
-  if (!imageUrl1 && req.file) {
+    if (!imageUrl1) {
+      imageUrl1 = saveBufferLocally(req.files.image[0].buffer, "orig");
+    }
+  } else if (req.file) {
     try {
       imageUrl1 = await uploadBufferToCloudinary(req.file.buffer);
     } catch (e) {
       imageUrl1 = null;
     }
-  }
-  if (!imageUrl1) {
-    imageUrl1 = req.body.imageUrl || req.body.reportImg || req.body.image || "https://images.unsplash.com/photo-1530587191325-3db32d826c18?w=800&auto=format&fit=crop&q=60";
+    if (!imageUrl1) {
+      imageUrl1 = saveBufferLocally(req.file.buffer, "orig");
+    }
   }
 
+  if (!imageUrl1) {
+    imageUrl1 = req.body.imageUrl || req.body.reportImg || req.body.image || "";
+  }
+
+  // 2. Process YOLO Annotated Upload
   if (req.files && req.files.image2 && req.files.image2[0]) {
     try {
       imageUrl2 = await uploadBufferToCloudinary(req.files.image2[0].buffer);
     } catch (e) {
-      imageUrl2 = imageUrl1;
+      imageUrl2 = null;
     }
-  } else {
-    imageUrl2 = req.body.reportYoloImg || imageUrl1;
+    if (!imageUrl2) {
+      imageUrl2 = saveBufferLocally(req.files.image2[0].buffer, "yolo");
+    }
+  }
+
+  // If image2 wasn't provided or failed, check if a direct URL was sent for reportYoloImg
+  if (!imageUrl2 && req.body.reportYoloImg && typeof req.body.reportYoloImg === "string") {
+    const cleanYoloUrl = req.body.reportYoloImg.trim();
+    if (cleanYoloUrl && !cleanYoloUrl.includes("images.unsplash.com")) {
+      imageUrl2 = cleanYoloUrl;
+    }
+  }
+
+  // 3. Process Detection Metadata
+  let detectionResults = null;
+  if (req.body.detectionResults) {
+    try {
+      detectionResults = typeof req.body.detectionResults === "string"
+        ? JSON.parse(req.body.detectionResults)
+        : req.body.detectionResults;
+    } catch (parseErr) {
+      detectionResults = null;
+    }
   }
 
   // ------------------- STEP 3: User Assignment -------------------
@@ -144,8 +193,9 @@ exports.createReport = async (req, res) => {
 
   // ------------------- STEP 4: Save report -------------------
   const newReport = await Report.create({
-    reportImg: imageUrl1,
-    reportYoloImg: imageUrl2,
+    reportImg: imageUrl1 || "",
+    reportYoloImg: imageUrl2 || "",
+    detectionResults: detectionResults,
     reportType,
     severity,
     landmark,

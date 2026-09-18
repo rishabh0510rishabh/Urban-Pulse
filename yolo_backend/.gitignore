@@ -1,7 +1,27 @@
-__pycache__
-uploads
-yolovenv
-venv
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+yolovenv/
+venv/
+.venv/
+
+# Environment variables / secrets
 .env
 .env.*
 !.env.example
+
+# Uploads
+uploads/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

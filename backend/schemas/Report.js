@@ -10,6 +10,10 @@ const reportSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    detectionResults: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
     reportType: {
       type: String,
       enum: ["garbage", "pothole", "blind_turn", "road_hazard", "drainage"],

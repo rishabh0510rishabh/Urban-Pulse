@@ -24,16 +24,42 @@ function LoadingSpinner() {
   );
 }
 
+// Dynamic image URL resolver helper
+const resolveImageUrl = (url) => {
+  if (!url) return "";
+  if (
+    url.startsWith("http://") ||
+    url.startsWith("https://") ||
+    url.startsWith("blob:") ||
+    url.startsWith("data:")
+  ) {
+    return url;
+  }
+  const apiBase =
+    process.env.REACT_APP_ENVIRONMENT === "production"
+      ? process.env.REACT_APP_API_URL_PROD || "https://urban-pulse-o4yc.onrender.com"
+      : process.env.REACT_APP_API_URL_LOCAL || "http://localhost:5000";
+  return `${apiBase.replace(/\/$/, "")}/${url.replace(/^\//, "")}`;
+};
+
+const isPlaceholderImage = (url) => {
+  if (!url) return true;
+  return (
+    url.includes("images.unsplash.com/photo-1530587191325") ||
+    url.includes("placeholder")
+  );
+};
+
 export default function OfficialsReportDisplay() {
   const { id } = useParams();
   const [currReport, setCurrReport] = useState(null);
+  const [mainImgError, setMainImgError] = useState(false);
+  const [origImgError, setOrigImgError] = useState(false);
 
   useEffect(() => {
     const getReport = async () => {
       try {
         const res = await api.get(`/reports/${id}`);
-        console.log(res);
-
         setCurrReport(res.data.report);
       } catch (err) {
         console.error("Error fetching report:", err);
@@ -49,6 +75,7 @@ export default function OfficialsReportDisplay() {
   const {
     reportImg,
     reportYoloImg,
+    detectionResults,
     reportType,
     severity,
     landmark,
@@ -57,7 +84,17 @@ export default function OfficialsReportDisplay() {
     status,
     time,
     reportOwner,
+    resolvedImg,
   } = currReport;
+
+  // Determine valid images avoiding placeholder/AI fallbacks
+  const hasValidYolo = Boolean(reportYoloImg && !isPlaceholderImage(reportYoloImg));
+  const hasValidOrig = Boolean(reportImg && !isPlaceholderImage(reportImg));
+
+  // The primary Evidence Photo MUST be the YOLO detection image if available
+  const evidencePhotoUrl = hasValidYolo ? reportYoloImg : (hasValidOrig ? reportImg : null);
+  const isYoloEvidence = hasValidYolo;
+  const showSeparateOriginal = hasValidYolo && hasValidOrig && reportImg !== reportYoloImg;
 
   return (
     <main className="report-display-page">
@@ -75,13 +112,64 @@ export default function OfficialsReportDisplay() {
           {/* --- Images Column --- */}
           <section className="report-images">
             <div className="image-display">
-              <h2 className="image-display__caption">Evidence Photo</h2>
-              <img
-                src={reportImg}
-                alt="Original report"
-                className="image-display__img"
-              />
+              <div className="image-display__header">
+                <h2 className="image-display__caption">Evidence Photo</h2>
+                {isYoloEvidence && (
+                  <span className="yolo-badge" title="Verified YOLOv8 Detection">
+                    🤖 AI Detection (YOLOv8)
+                  </span>
+                )}
+              </div>
+
+              {evidencePhotoUrl && !mainImgError ? (
+                <img
+                  src={resolveImageUrl(evidencePhotoUrl)}
+                  alt="Evidence"
+                  className="image-display__img"
+                  onError={() => setMainImgError(true)}
+                />
+              ) : (
+                <div className="image-display-fallback">
+                  <span className="fallback-icon">📷</span>
+                  <p className="fallback-title">Detection image unavailable</p>
+                  <span className="fallback-sub">No verified detection photo found for this report</span>
+                </div>
+              )}
             </div>
+
+            {/* Original Citizen Photo if different from annotated image */}
+            {showSeparateOriginal && !origImgError && (
+              <div className="image-display" style={{ marginTop: "1rem" }}>
+                <div className="image-display__header">
+                  <h2 className="image-display__caption" style={{ fontSize: "0.95rem", color: "#64748b" }}>
+                    Original Citizen Upload
+                  </h2>
+                </div>
+                <img
+                  src={resolveImageUrl(reportImg)}
+                  alt="Citizen upload"
+                  className="image-display__img"
+                  style={{ opacity: 0.92 }}
+                  onError={() => setOrigImgError(true)}
+                />
+              </div>
+            )}
+
+            {/* Resolved Photo if resolved */}
+            {resolvedImg && (
+              <div className="image-display" style={{ marginTop: "1rem" }}>
+                <div className="image-display__header">
+                  <h2 className="image-display__caption" style={{ color: "#27ae60" }}>
+                    Resolution Evidence
+                  </h2>
+                </div>
+                <img
+                  src={resolveImageUrl(resolvedImg)}
+                  alt="Resolution"
+                  className="image-display__img"
+                />
+              </div>
+            )}
           </section>
 
           {/* --- Details Column --- */}
@@ -114,6 +202,32 @@ export default function OfficialsReportDisplay() {
                     {severity || "Medium"}
                   </span>
                 </dd>
+
+                {/* AI Detection Findings */}
+                {detectionResults && (
+                  <>
+                    <dt>AI Detection Analysis</dt>
+                    <dd>
+                      <div className="detection-analysis-box">
+                        <span className="detection-count-badge">
+                          {Array.isArray(detectionResults)
+                            ? `✓ ${detectionResults.length} object(s) detected`
+                            : "✓ Detection logged"}
+                        </span>
+                        {Array.isArray(detectionResults) && detectionResults.length > 0 && (
+                          <div className="detection-tags">
+                            {detectionResults.map((det, idx) => (
+                              <span key={idx} className="detection-tag">
+                                {det.class || "garbage"}{" "}
+                                {det.confidence ? `(${(det.confidence * 100).toFixed(0)}%)` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </dd>
+                  </>
+                )}
 
                 {landmark && (
                   <>
@@ -157,20 +271,20 @@ export default function OfficialsReportDisplay() {
               <dl>
                 <dt>Name</dt>
                 <dd>
-                  {reportOwner.fname} {reportOwner.lname}
+                  {reportOwner?.fname} {reportOwner?.lname}
                 </dd>
 
                 <dt>Email</dt>
-                <dd>{reportOwner.email}</dd>
+                <dd>{reportOwner?.email || "N/A"}</dd>
 
                 <dt>Phone</dt>
-                <dd>{reportOwner.phone || "N/A"}</dd>
+                <dd>{reportOwner?.phone || "N/A"}</dd>
 
                 <dt>Address</dt>
-                <dd>{reportOwner.address || "N/A"}</dd>
+                <dd>{reportOwner?.address || "N/A"}</dd>
 
                 <dt>Role</dt>
-                <dd>{reportOwner.role}</dd>
+                <dd>{reportOwner?.role || "user"}</dd>
               </dl>
             </div>
           </section>

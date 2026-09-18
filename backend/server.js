@@ -135,6 +135,14 @@ app.use(
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+// Serve static uploads for local file storage
+const uploadsPath = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+app.use("/uploads", express.static(uploadsPath));
+
 app.use(session(sessionOptions));
 app.use(passport.initialize());
 app.use(passport.session());

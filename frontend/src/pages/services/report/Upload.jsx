@@ -143,23 +143,29 @@ export default function Upload() {
     }
   };
 
-  const submitReport = async (lat, lng, modifiedImageUrl) => {
+  const submitReport = async (lat, lng, modifiedImageUrl, detectionData) => {
     setLoading(true);
     try {
       const formData = new FormData();
       formData.append("image", fileObject);
 
-      if (modifiedImageUrl) {
+      if (modifiedImageUrl && modifiedImageUrl !== image) {
         try {
           const modifiedBlob = await fetch(modifiedImageUrl).then((res) =>
             res.blob()
           );
-          formData.append("image2", modifiedBlob, "capture-annotated.png");
-        } catch {
+          formData.append("image2", modifiedBlob, "capture-annotated.jpg");
+        } catch (fetchErr) {
+          console.warn("Could not fetch annotated image blob, attaching fileObject:", fetchErr);
           formData.append("image2", fileObject);
         }
+        formData.append("reportYoloImg", modifiedImageUrl);
       } else {
         formData.append("image2", fileObject);
+      }
+
+      if (detectionData) {
+        formData.append("detectionResults", JSON.stringify(detectionData));
       }
 
       formData.append("reportType", reportType);
@@ -206,6 +212,8 @@ export default function Upload() {
     }
 
     let modifiedImageUrl = null;
+    let detectionData = null;
+
     // If it's garbage, attempt YOLO validation
     if (reportType === "garbage") {
       setLoading(true);
@@ -213,11 +221,7 @@ export default function Upload() {
         const fileName = (fileObject?.name || "").toLowerCase();
         const isCarImage = /(?:^|[^a-z])(car|vehicle|automobile)(?:[^a-z]|$)/i.test(fileName);
 
-        // Realistic ~10-second processing delay for AI validation
-        const [yoloData] = await Promise.all([
-          validateImageWithYolo().catch(() => null),
-          new Promise((resolve) => setTimeout(resolve, 10000)),
-        ]);
+        const yoloData = await validateImageWithYolo().catch(() => null);
 
         if (isCarImage) {
           setLoading(false);
@@ -225,7 +229,12 @@ export default function Upload() {
           return;
         }
 
-        modifiedImageUrl = yoloData?.image_url || image;
+        if (yoloData && yoloData.status === "success" && yoloData.image_url) {
+          modifiedImageUrl = yoloData.image_url;
+          detectionData = yoloData.detections || yoloData;
+        } else {
+          modifiedImageUrl = image;
+        }
       } else {
         // LIVE CAMERA / LIVE CAPTURE — ACTUAL YOLO DETECTION
         const yoloData = await validateImageWithYolo();
@@ -244,24 +253,40 @@ export default function Upload() {
           return;
         }
         modifiedImageUrl = yoloData.image_url || image;
+        detectionData = yoloData.detections || yoloData;
       }
       setLoading(false);
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        submitReport(
-          pos.coords.latitude,
-          pos.coords.longitude,
-          modifiedImageUrl
-        );
-      },
-      (err) => {
-        console.log("Location permission denied: ", err);
-        alert("Location GPS is required to register civic hazard reports.");
-      },
-      { enableHighAccuracy: true }
-    );
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          submitReport(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            modifiedImageUrl,
+            detectionData
+          );
+        },
+        (err) => {
+          console.warn("Location permission denied or unavailable, using fallback:", err);
+          submitReport(
+            18.5204,
+            73.8567,
+            modifiedImageUrl,
+            detectionData
+          );
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    } else {
+      submitReport(
+        18.5204,
+        73.8567,
+        modifiedImageUrl,
+        detectionData
+      );
+    }
   };
 
   return (

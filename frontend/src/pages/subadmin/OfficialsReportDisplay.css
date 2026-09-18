@@ -155,7 +155,102 @@
   .status--pending { background-color: var(--color-pending); }
   .status--allotted { background-color: var(--color-allotted); }
   .status--resolved { background-color: var(--color-resolved); }
-  
+
+  /* 7b. IMAGE HEADER & YOLO BADGE */
+  .image-display__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .image-display__header .image-display__caption {
+    margin-bottom: 0;
+  }
+
+  .yolo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+    padding: 3px 9px;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* 7c. IMAGE FALLBACK STATE */
+  .image-display-fallback {
+    background: #f8fafc;
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+  }
+
+  .image-display-fallback .fallback-icon {
+    font-size: 2.2rem;
+    opacity: 0.6;
+    margin-bottom: 0.25rem;
+  }
+
+  .image-display-fallback .fallback-title {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #475569;
+    margin: 0;
+  }
+
+  .image-display-fallback .fallback-sub {
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+
+  /* 7d. AI DETECTION ANALYSIS BOX */
+  .detection-analysis-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    margin-top: 0.25rem;
+  }
+
+  .detection-count-badge {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #166534;
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
+  .detection-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .detection-tag {
+    background: #dcfce7;
+    color: #14532d;
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid #86efac;
+    text-transform: capitalize;
+  }
+
   /* 8. RESPONSIVE DESIGN */
   @media (max-width: 850px) {
     .report-body__grid {
